@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+
+<launch>
+  
+  <!-- args: Pass arguments to node; default: arg value can be overwritten-->
+
+  <!--trajectory_source_frame_name: The name of the tf source frame-->
+  <arg name="trajectory_source_frame_name" default="/base_link"/>
+
+  <!--trajectory_update_rate: The update rate [hz] for the saved trajectory-->
+  <arg name="trajectory_update_rate" default="4"/>
+
+  <!--trajectory_publish_rate: The publish rate [hz] for the trajectory published on the "trajectory" topic.-->
+  <arg name="trajectory_publish_rate" default="0.25"/>
+
+  <!--map_file_path: The path generated geotiff maps are saved to-->
+  <arg name="map_file_path" default="$(find thi_exploration)/maps"/>
+
+  <!-- he base name given to the generated geotiff file. The current time is appended to this base name when the map is saved.-->
+  <arg name="map_file_base_name" default="hector_slam_map"/>
+
+  <!-- node:-->
+  <!-- pkg: Package of Node-->
+  <!-- type: Node type. There must be a corresponding executable with the same name-->
+  <!-- respawn: Restart the node automatically if it quits-->
+  <!-- name: Name of Node-->
+  <!-- output: If 'screen', stdout/stderr from the node will be sent to the screen-->
+  <!--Parameter will be setted on the Parameter Server-->
+  <node pkg="hector_trajectory_server" type="hector_trajectory_server" name="hector_trajectory_server" output="screen">
+
+    <!--target_frame_name: The name of the tf target frame-->
+    <param name="target_frame_name" type="string" value="/map" />
+    <!--source_frame_name: The name of the tf source frame-->
+    <param name="source_frame_name" type="string" value="$(arg trajectory_source_frame_name)" />
+    <param name="trajectory_update_rate" type="double" value="$(arg trajectory_update_rate)" />
+    <param name="trajectory_publish_rate" type="double" value="$(arg trajectory_publish_rate)" />
+  </node>
+
+  <node pkg="hector_geotiff" type="geotiff_node" name="hector_geotiff_node" output="screen" launch-prefix="nice -n 15">
+    <remap from="map" to="/dynamic_map" />
+    <param name="map_file_path" type="string" value="$(arg map_file_path)" />
+    <param name="map_file_base_name" type="string" value="$(arg map_file_base_name)" />
+
+    <!--geotiff_save_period: The period in seconds for automatically saving geotiff files periodically. 0.0: automatic saving is disabled.-->
+    <param name="geotiff_save_period" type="double" value="0" />
+
+    <param name="draw_background_checkerboard" type="bool" value="true" />
+    <param name="draw_free_space_grid" type="bool" value="true" />
+    <param name="plugins" type="string" value="hector_geotiff_plugins/TrajectoryMapWriter" />
+  </node>
+
+</launch>

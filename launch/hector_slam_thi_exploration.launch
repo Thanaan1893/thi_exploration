@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+
+<launch>
+  <node pkg="tf" type="static_transform_publisher" name="map2map_from_hector" args="0 0 0 0 0 0  map_from_hector map 10" />
+
+ <!-- args: Pass arguments to node; default: arg value can be overwritten-->
+
+ <!--map_file_path: The path generated geotiff maps are saved to-->
+ <arg name="geotiff_map_file_path" default="$(find thi_exploration)/maps"/>
+   
+  <!--Parameter will be setted on the Parameter Server-->
+  <!--/use_sim_time: current simulation time-->
+  <param name="/use_sim_time" value="true"/>
+   
+  <!-- node:-->
+  <!-- pkg: Package of Node-->
+  <!-- type: Node type. There must be a corresponding executable with the same name-->
+  <!-- name: Name of Node-->
+  <!-- args: Pass arguments to node -->
+
+  <node pkg="rviz" type="rviz" name="rviz_1" args="-d $(find thi_exploration)/config/navigation_config_thi_exploration.rviz"/>
+
+  <!-- include: Name of file to include -->
+  
+  <include file="$(find thi_exploration)/launch/mapping_thi_exploration.launch"/>
+
+  <include file="$(find thi_exploration)/launch/geotiff_mapper_thi_exploration.launch">
+   
+   <!--source_frame_name: The name of the tf source frame-->
+   <arg name="trajectory_source_frame_name" value="scanmatcher_frame"/>
+
+    <!--map_file_path: The path generated geotiff maps are saved to-->
+    <arg name="map_file_path" value="$(arg geotiff_map_file_path)"/>
+  </include>
+
+
+
+</launch>
+ 
+
+
+
