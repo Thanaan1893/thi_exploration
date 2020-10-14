@@ -66,139 +66,71 @@ std::vector <Frontiers> every_frontier;
 void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg);
 
 
-//Function for the Frontier pixels in the right-line
+//Loop for the Frontier pixels in the right-line
 //Parameter std::vector with the mapdata, nav msgs:: mapinfo and the Position of the Pixel
-void RightFrontiers( std::vector<signed char> rightdata, nav_msgs::MapMetaData rightinfo , int rightcounter)
-{ 
-    int right = rightcounter;
-    Frontiers rightfront();
-    //every_frontier.push_back(rightfront);
-    // while (( right % rightinfo.width != rightinfo.width -1 ) && (rightdata[right]!=occupied_pixel)){
-    //rightfront.set_pixel_length(right);
-    //rightfront.print_pixel_length();
-    //right++;
-    //} 
-    //cout << "End of Frontiers object: \n" << right << endl;
-        
-        
-}
+void SeachringFrontiers( std::vector<signed char> data_map, nav_msgs::MapMetaData info_map , int counter)
+{
+  int right = counter;
+  int left = counter;
+  int up = counter;
+  int down = counter;
+  int leftup = counter;
+  int rightup = counter;
+  int rightdown = counter;
+  int leftdown = counter;
+  Frontiers collectedfrontiers;
+  every_frontier.push_back(collectedfrontiers);
+  cout << "Start to look for frontiers:\n" << endl;
+  while (( right % info_map.width != info_map.width -1 ) && (data_map[right]!=occupied_pixel)){
 
-//Function for the Frontier pixels in the left-line
-//Parameter std::vector with the mapdata, nav msgs:: mapinfo and the Position of the Pixel
-void LeftFrontiers( std::vector<signed char> leftdata, nav_msgs::MapMetaData leftinfo , int leftcounter)
-{ 
-    int left = leftcounter;
-    Frontiers leftfront();
-    //every_frontier.push_back(leftfront);
-    //while (( left % leftinfo.width != 0 ) && (leftdata[left]!=occupied_pixel)){
-    //leftfront.set_pixel_length(left);
-    //leftfront.print_pixel_length();
-    //left--;
-    //} 
-    //cout << "End of Frontiers object: \n" << left << endl;
-        
-        
-}
+    collectedfrontiers.set_pixel_length(right);
+    right++;
+  }
+  
+  //Loop for the Frontier pixels in the left-line
+  while (( left % info_map.width != 0 ) && (data_map[left]!=occupied_pixel)){
+    collectedfrontiers.set_pixel_length(left);
+    left--;
+  } 
 
-//Function for the Frontier pixels in the up-column
-//Parameter std::vector with the mapdata, nav msgs:: mapinfo and the Position of the Pixel
-void UpFrontiers( std::vector<signed char> updata, nav_msgs::MapMetaData upinfo , int upcounter)
-{ 
-    int up = upcounter;
-    Frontiers upfront();
-    //every_frontier.push_back(upfront);
-    //while (( up <= upinfo.width -1 ) && (updata[up]!=occupied_pixel)){
-    //upfront.set_pixel_length(up);
-    //upfront.print_pixel_length();
-    //up = up - upinfo.width;
-    //} 
-    //cout << "End of Frontiers object: \n" << up << endl;
-        
-        
-}
+  //Loop for the Frontier pixels in the up-column
+  while (( up <= info_map.width -1 ) && (data_map[up]!=occupied_pixel)){
 
-//Function for the Frontier pixels in the down-column
-//Parameter std::vector with the mapdata, nav msgs:: mapinfo and the Position of the Pixel
-void DownFrontiers( std::vector<signed char> downdata, nav_msgs::MapMetaData downinfo , int downcounter)
-{ 
-    int down = downcounter;
-    Frontiers downfront();
-    //every_frontier.push_back(downfront);
-    //while (( down >= downinfo.width * downinfo.height-1 ) && (downdata[down]!=occupied_pixel)){
-    //downfront.set_pixel_length(down);
-    //downfront.print_pixel_length();
-    //down = down + downinfo.width;
-    //} 
-    //cout << "End of Frontiers object: \n" << down << endl;
+    collectedfrontiers.set_pixel_length(up);
+    up = up - info_map.width;
+  } 
+  
+  //Loop for the Frontier pixels in the down-column
+  while (( down >= info_map.width * info_map.height-1 ) && (data_map[down]!=occupied_pixel)){
+    collectedfrontiers.set_pixel_length(down);
+    down = down + info_map.width;
+  } 
         
-        
-}
+  //Loop for the Frontier pixels in the left-up-diagonal-line
+  while (( leftup <= info_map.width -1 ) && (data_map[leftup]!=occupied_pixel)){
+    collectedfrontiers.set_pixel_length(leftup);
+    leftup = leftup - info_map.width-1;
+  } 
+  
+  //Loop for the Frontier pixels in the right-up-diagonal-line
+  while (( rightup <= info_map.width -1 ) && (data_map[rightup]!=occupied_pixel)){
+    collectedfrontiers.set_pixel_length(rightup);
+    rightup = rightup - info_map.width+1;
+  } 
 
-//Function for the Frontier pixels in the left-up-diagonal-line
-//Parameter std::vector with the mapdata, nav msgs:: mapinfo and the Position of the Pixel
-void LeftUpFrontiers( std::vector<signed char> leftupdata, nav_msgs::MapMetaData leftupinfo , int leftupcounter)
-{ 
-    int leftup = leftupcounter;
-    Frontiers leftupfront();
-    //every_frontier.push_back(leftupfront);
-    //while (( leftup <= leftupinfo.width -1 ) && (leftupdata[leftup]!=occupied_pixel)){
-    //leftupfront.set_pixel_length(leftup);
-    //leftfront.print_pixel_length();
-    //leftup = leftup - leftupinfo.width-1;
-    //} 
-    //cout << "End of Frontiers object: \n" << leftup << endl;
-        
-        
-}
-
-//Function for the Frontier pixels in the right-up-diagonal-line
-//Parameter std::vector with the mapdata, nav msgs:: mapinfo and the Position of the Pixel
-void RightUpFrontiers( std::vector<signed char> rightupdata, nav_msgs::MapMetaData rightupinfo , int rightupcounter)
-{ 
-    int rightup = rightupcounter;
-    Frontiers rightupfront();
-    //every_frontier.push_back(rightupfront);
-    //while (( rightup <= rightupinfo.width -1 ) && (rightupdata[rightup]!=occupied_pixel)){
-    //rightupfront.set_pixel_length(rightup);
-    //rightfront.print_pixel_length();
-    //rightup = rightup - rightupinfo.width+1;
-    //} 
-    //cout << "End of Frontiers object: \n" << rightup << endl;
-        
-        
-}
-
-//Function for the Frontier pixels in the left-down-diagonal-line
-//Parameter std::vector with the mapdata, nav msgs:: mapinfo and the Position of the Pixel
-void LeftDownFrontiers( std::vector<signed char> leftdowndata, nav_msgs::MapMetaData leftdowninfo , int leftdowncounter)
-{ 
-    int leftdown = leftdowncounter;
-    Frontiers leftdownfront();
-    //every_frontier.push_back(leftdownfront);
-    //while (( leftdown >= leftdowninfo.width * leftdowninfo.height-1 ) && leftdowndata[leftdown]!=occupied_pixel)){
-    //leftdownfront.set_pixel_length(leftdown);
-    //leftdownfront.print_pixel_length();
-    //leftdown = leftdown + leftdowninfo.width;
-    //} 
-    //cout << "End of Frontiers object: \n" << leftdown << endl;
-        
-        
-}
-
-//Function for the Frontier pixels in the Right-up-diagonal-line
-//Parameter std::vector with the mapdata, nav msgs:: mapinfo and the Position of the Pixel
-void RightDownFrontiers( std::vector<signed char> rightdowndata, nav_msgs::MapMetaData rightdowninfo , int rightdowncounter)
-{ 
-    int rightdown = rightdowncounter;
-    Frontiers rightdownfront();
-    //every_frontier.push_back(rightdownfront);
-    //while (( rightdown >= rightdowninfo.width * rightdowninfo.height-1 ) && rightdowndata[rightdown]!=occupied_pixel)){
-    //rightdownfront.set_pixel_length(rightdown);
-    //rightdownfront.print_pixel_length();
-    //rightdown = rightdown + rightdowninfo.width;
-    //} 
-    //cout << "End of Frontiers object: \n" << rightdown << endl;
-        
+  //Loop for the Frontier pixels in the left-down-diagonal-line
+  while (( leftdown >= info_map.width * info_map.height-1 ) && (data_map[leftdown]!=occupied_pixel)){
+    collectedfrontiers.set_pixel_length(leftdown);
+    leftdown = leftdown + info_map.width;
+  } 
+  
+  //Loop for the Frontier pixels in the Right-up-diagonal-line
+  while (( rightdown >= info_map.width * info_map.height-1 ) && (data_map[rightdown]!=occupied_pixel)){
+    collectedfrontiers.set_pixel_length(rightdown);
+    rightdown = rightdown + info_map.width;
+    } 
+  cout << "All Frontiers of the Pixel "<< counter << " were found:\n" << endl;
+  collectedfrontiers.print_pixel_length();     
         
 }
 
@@ -399,8 +331,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
     if( (msg->data[i] ==free_pixel) &&( (msg->data[i-1] == unexplored_pixel) || (msg->data[i-info_old.width] == unexplored_pixel) ||  (msg->data[i+1] ==unexplored_pixel) || (msg->data[i+info_old.width] ==unexplored_pixel) )){
       //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
       NewMap.data[i] =100;
-
-      
+      SeachringFrontiers( data, info_old , i);
     }
 
     else
