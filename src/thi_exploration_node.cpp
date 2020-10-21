@@ -30,14 +30,14 @@ class Frontiers {
 
   private:
     std:: vector< int> pixel_length;
-    int pixel_size;
+    int number_of_pixel;
     int number_of_diagonals;
 
   public:
 
     Frontiers(){
       cout << "object created" <<endl;
-      pixel_size = 0;
+      number_of_pixel = 0;
       number_of_diagonals = 0;
 
     }
@@ -66,8 +66,8 @@ class Frontiers {
     }
 
     int get_pixel_size(){
-      pixel_size = pixel_length.size();
-      return pixel_size;
+      number_of_pixel = pixel_length.size();
+      return number_of_pixel;
     }
 
     int get_diagonals(){
@@ -97,15 +97,18 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg);
 //Parameter std::vector with the mapdata, nav msgs:: mapinfo and the Position of the Pixel
 void SeachringFrontiers( std::vector<signed char> data_map, nav_msgs::MapMetaData info_map , int counter)
 {
-  int right = counter;
-  int left = counter;
-  int up = counter;
-  int down = counter;
-  int leftup = counter;
-  int rightup = counter;
-  int rightdown = counter;
-  int leftdown = counter;
+  int right = counter + 1;
+  int left = counter - 1;
+  int up = counter - info_map.width;
+  int down = counter + info_map.width;
+  int leftup = counter - info_map.width-1;
+  int rightup = counter  - info_map.width+1;
+  int leftdown = counter + info_map.width-1;
+  int rightdown = counter  + info_map.width+1;
   Frontiers collectedfrontiers;
+  
+
+  collectedfrontiers.set_pixel_length(counter);
   every_frontier.push_back(collectedfrontiers);
 
   cout << "Start to look for frontiers:\n" << endl;
@@ -163,9 +166,8 @@ void SeachringFrontiers( std::vector<signed char> data_map, nav_msgs::MapMetaDat
     rightdown = rightdown + info_map.width+1;
     collectedfrontiers.diagonal_registered();
   } 
-  
-  cout << "All Frontiers of the Pixel "<< counter << " were found:\n" << endl;
-  collectedfrontiers.print_pixel_length();     
+  cout << "All Frontiers of the Pixel "<< counter << " were found: \n" << endl;
+  //collectedfrontiers.print_pixel_length();     
         
 }
 
@@ -183,30 +185,36 @@ bool ExistedFrontier (int position){
 int BiggestFrontier (){
 
   int size_of_frontier = 0;
+  int frontier_pos =0;
   for (int iter = 0; iter < every_frontier.size(); iter++)
   {
     if( every_frontier[iter].get_pixel_size() > size_of_frontier)
     {
       size_of_frontier=every_frontier[iter].get_pixel_size();
+      frontier_pos = iter;
     } 
      
   }
-    return size_of_frontier;
+    return frontier_pos;
 }
 
 int MostDiagonalsFrontier (){
 
   int diagonals_of_frontier = 0;
+  int pos_frontier = 0;
   for (int iter = 0; iter < every_frontier.size(); iter++)
   {
     if( every_frontier[iter].get_diagonals() < diagonals_of_frontier)
     {
       diagonals_of_frontier=every_frontier[iter].get_diagonals();
+      pos_frontier = iter;
     } 
      
   }
-    return diagonals_of_frontier;
+    return pos_frontier;
 }
+
+
 
 /**
  * Main function of ros node
@@ -217,8 +225,7 @@ int MostDiagonalsFrontier (){
 
 int main( int argc, char ** argv)
 { 
-  int a = 0;
-  int b = 0;
+  
   // Initialization of ros node
   ros::init(argc, argv , "thi_exploration");
 
@@ -230,6 +237,7 @@ int main( int argc, char ** argv)
 
   // Initialization for the ROS-Publisher to publish the new map data
   map_pub = nh.advertise<nav_msgs::OccupancyGrid>("frontier_exploration",1);
+  
 
   ros::spin(); 
   
@@ -305,52 +313,43 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
        
     //Pixels in the first line--> not included the up left/ up-right corner
 
-    if(i<info_old.width-1){
-
-      if(i!=0){
-        //ROS_INFO("The neighbours in the first line (without up left/right corner) are  %d, %d, %d \n", i-1, i+1 , i+info_old.width);
+    if( (i<info_old.width-1)&&(i!=0) ){
+      //ROS_INFO("The neighbours in the first line (without up left/right corner) are  %d, %d, %d \n", i-1, i+1 , i+info_old.width);
         
-        if( (msg->data[i] ==free_pixel) && ((msg->data[i-1] ==unexplored_pixel) || (msg->data[i+1] ==unexplored_pixel) || (msg->data[i+info_old.width] ==unexplored_pixel))){
-          //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
+      if( (msg->data[i] ==free_pixel) && ((msg->data[i-1] ==unexplored_pixel) || (msg->data[i+1] ==unexplored_pixel) || (msg->data[i+info_old.width] ==unexplored_pixel))){
+        //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
           
-          if (ExistedFrontier(i)==false) {
-            SeachringFrontiers( data, info_old , i);
-            NewMap.data[i] =100;
-          }
+        if (ExistedFrontier(i)==false) {
+          SeachringFrontiers( data, info_old , i);
+          NewMap.data[i] =100;
         }
-
-        continue;
       }
+      continue;
+      
     }
 
-    // Pixels in the first column --> not included up-left / down left corner#
+    // Pixels in the first column --> not included up-left / down left corner
 
-    if(i % info_old.width == 0){
-
-      if (i!=0) {
-
-        if (i != info_old.width * (info_old.height-1)){
-          //ROS_INFO("The neighbours  in the first column (wihtout up/down left corner) are  %d, %d, %d \n", i-info_old.width, i+1, i+info_old.width  );
+    if( (i % info_old.width == 0) && (i!=0) && (i != info_old.width * (info_old.height-1) ) ){
+      //ROS_INFO("The neighbours  in the first column (wihtout up/down left corner) are  %d, %d, %d \n", i-info_old.width, i+1, i+info_old.width  );
           
-          if( (msg->data[i] ==free_pixel) &&( (msg->data[i-info_old.width] ==unexplored_pixel) || (msg->data[i+1] ==unexplored_pixel) || (msg->data[i+info_old.width] ==unexplored_pixel))){
-            //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
+      if( (msg->data[i] ==free_pixel) &&( (msg->data[i-info_old.width] ==unexplored_pixel) || (msg->data[i+1] ==unexplored_pixel) || (msg->data[i+info_old.width] ==unexplored_pixel))){
+        //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
             
-            if (ExistedFrontier(i)==false) {
-              SeachringFrontiers( data, info_old , i);
-              NewMap.data[i] =100;
-            }
-          }
-
-          else{
-            NewMap.data[i] =0;
-          }
-          
-          continue;
+        if (ExistedFrontier(i)==false) {
+          SeachringFrontiers( data, info_old , i);
+          NewMap.data[i] =100;
         }
       }
+
+      else{
+        NewMap.data[i] =0;
+      }
+          
+      continue;
+      
     }
     
-  
     // Pixel at the down-left corner
 
     if(i == info_old.width * (info_old.height-1)){
@@ -374,53 +373,43 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     // Pixels in the last line--> not included the down-left / down right corner
 
-    if(i>info_old.width *(info_old.height-1)) {
-
-      if (i< info_old.width *info_old.height-1){
-        //ROS_INFO("The neighbours in the last line (without down-left/right corner) are  %d, %d, %d \n", i-1,  i-info_old.width, i+1 );
+    if( (i>info_old.width *(info_old.height-1)) && (i< info_old.width *info_old.height-1) ){
+      //ROS_INFO("The neighbours in the last line (without down-left/right corner) are  %d, %d, %d \n", i-1,  i-info_old.width, i+1 );
         
-        if( (msg->data[i] ==free_pixel) && ((msg->data[i-1] ==unexplored_pixel) || (msg->data[i-info_old.width] ==unexplored_pixel) || (msg->data[i+1] ==unexplored_pixel) ) ){
-          //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
+      if( (msg->data[i] ==free_pixel) && ((msg->data[i-1] ==unexplored_pixel) || (msg->data[i-info_old.width] ==unexplored_pixel) || (msg->data[i+1] ==unexplored_pixel) ) ){
+        //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
 
-          if (ExistedFrontier(i)==false) {
-            SeachringFrontiers( data, info_old , i);
-            NewMap.data[i] =100;
-          }
+        if (ExistedFrontier(i)==false) {
+          SeachringFrontiers( data, info_old , i);
+          NewMap.data[i] =100;
         }
-
-        else{
-          NewMap.data[i] =0;
-        }
-        
-        continue;
       }
+
+      else{
+        NewMap.data[i] =0;
+      }
+       
+      continue;
     }
 
     // Pixels in the last column --> not included the up-right / down right corner
 
-    if (i % info_old.width == info_old.width -1) {
-
-      if (i!=info_old.width-1) {
-
-        if (i != info_old.width * info_old.height -1){
-          //ROS_INFO("The neighbours in the last column (without up/down right corner) are  %d, %d, %d \n", i-info_old.width, i-1, i+info_old.width  );
-        
-          if( (msg->data[i] ==free_pixel) && ((msg->data[i-info_old.width] ==unexplored_pixel) || (msg->data[i-1] ==unexplored_pixel) ||  (msg->data[i+1] ==unexplored_pixel) )){
-            //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
+    if ( (i % info_old.width == info_old.width -1) && (i!=info_old.width-1) && (i != info_old.width * info_old.height -1) ){
+      //ROS_INFO("The neighbours in the last column (without up/down right corner) are  %d, %d, %d \n", i-info_old.width, i-1, i+info_old.width  );
+       
+      if( (msg->data[i] ==free_pixel) && ((msg->data[i-info_old.width] ==unexplored_pixel) || (msg->data[i-1] ==unexplored_pixel) ||  (msg->data[i+1] ==unexplored_pixel) )){
+        //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
           
-            if (ExistedFrontier(i)==false) {
-              SeachringFrontiers( data, info_old , i);
-              NewMap.data[i] =100;
-            }
-          }
-
-          else{
-            NewMap.data[i] =0;
-          }
-        
-          continue;
+        if (ExistedFrontier(i)==false) {
+          SeachringFrontiers( data, info_old , i);
+          NewMap.data[i] =100;
         }
       }
+
+      else{
+        NewMap.data[i] =0;
+      } 
+      continue;
     }
 
     //Pixel at the down-right corner
@@ -459,12 +448,10 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
     else{
       NewMap.data[i] =0;
     }
-    
   }
 
   // Initialization for the ROS-Publisher to publish the new map data
   ROS_INFO_STREAM("Publishing the NewMap.\n"  );
-
   map_pub.publish(NewMap);
 }
 
