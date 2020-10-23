@@ -90,6 +90,7 @@ int occupied_pixel = 100;
 int unexplored_pixel = -1;
 std::vector <Frontiers> every_frontier;
 int anze=0;
+int replacement =50;
 
 //Function for the received map data
 void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg);
@@ -131,7 +132,7 @@ void SeachringFrontiers( std::vector<signed char> data_map, nav_msgs::MapMetaDat
 
   
   //Loop for the Frontier pixels in the up-column
-  while (( up >= info_map.width -1 ) && (data_map[up]!=occupied_pixel)){
+  while ( ( up >= info_map.width -1 ) && (data_map[up]!=occupied_pixel)){
     collectedfrontiers.set_pixel_length(up);
     //cout << "oben" << endl;
     up = up - info_map.width;
@@ -161,7 +162,7 @@ void SeachringFrontiers( std::vector<signed char> data_map, nav_msgs::MapMetaDat
   } 
 
   //Loop for the Frontier pixels in the left-down-diagonal-line
-  while (( leftdown <= info_map.width * info_map.height-1 ) && (data_map[leftdown]!=occupied_pixel)){
+  while (( leftdown <= info_map.width * info_map.height-1 ) && (data_map[leftdown]!=occupied_pixel)) {
     collectedfrontiers.set_pixel_length(leftdown);
     leftdown = leftdown + info_map.width-1;
     //cout << "linksunten" << endl;
@@ -228,32 +229,80 @@ int MostDiagonalsFrontier (){
     return pos_frontier;
 }
 
+std::vector<signed char> FloodfillFrontiers(int counter, int free_pixel , int replacement, std::vector<signed char> data_map, nav_msgs::MapMetaData info_map  ){
+  
+  std::vector<signed char> data_frontier =data_map;
+  int right = counter + 1;
+  int left = counter - 1;
+  int up = counter - info_map.width;
+  int down = counter + info_map.width;
+  int leftup = counter - info_map.width-1;
+  int rightup = counter  - info_map.width+1;
+  int leftdown = counter + info_map.width-1;
+  int rightdown = counter  + info_map.width+1;
+  //Frontiers collectedfrontiers;
+  
+  //collectedfrontiers.set_pixel_length(counter);
+  
 
-// void CollectFrontiers(){
-//   std::vector <Frontiers> first_frontier =  every_frontier;
-//   std::vector <Frontiers> second_frontier = every_frontier;
-//   for (int first = 0; first < every_frontier.size(); first++){
-//     for (int second = 0; second < every_frontier.size(); second++){
+  if (free_pixel == replacement)
 
-//       if(first == second )
-//       {
-//         continue;
-//       }
+  {
+    return data_frontier;
+  }
 
-//       for (int first_indizes = 0; first_indizes < first_frontier[first].size(); first_indizes++){
-//         for (int second_indizes = 0; second_indizes < second_frontier[second].size(); second_indizes++){
-          
-//           if (first_indizes+1 ==)
-//           {
-//             /* code */
-//           }
-          
+  else if (data_map[counter]!=free_pixel)
+  {
+    return data_frontier;
+  }
+  
+  else
+  {
+    data_map[counter] = replacement;
+  }
+  
+  if ( (right % info_map.width == info_map.width -1)  && (data_map[right]!=occupied_pixel ) )
+  {
+    FloodfillFrontiers(right,  free_pixel , replacement, data_map, info_map );
+  }
+  
+  if (( left % info_map.width == 0 ) && (data_map[left]!=occupied_pixel))
+  {
+    FloodfillFrontiers(left,  free_pixel , replacement, data_map, info_map );
+  }
+  
+  if (( up <= info_map.width -1 ) && (data_map[up]!=occupied_pixel))
+  {
+    FloodfillFrontiers(up,  free_pixel , replacement, data_map, info_map );
+  }
+  
+  if( ( down >= info_map.width * info_map.height-1 ) && (data_map[down]!=occupied_pixel) )
+  {
+    FloodfillFrontiers(down,  free_pixel , replacement, data_map, info_map );
+  }
+ 
+  if (( leftup <= info_map.width -1 ) && (data_map[leftup]!=occupied_pixel))
+  {
+    FloodfillFrontiers(leftup,  free_pixel , replacement, data_map, info_map );
+  }
 
-//     }
-//   }
+  if (( rightup <= info_map.width -1 ) && (data_map[rightup]!=occupied_pixel))
+  {
+    FloodfillFrontiers(rightup,  free_pixel , replacement, data_map, info_map );
+  }
+  
+   if (( leftdown >= info_map.width * info_map.height-1 ) && (data_map[leftdown]!=occupied_pixel))
+  {
+    FloodfillFrontiers(leftdown,  free_pixel , replacement, data_map, info_map );
+  }
+  
+  if (( rightdown >= info_map.width * info_map.height-1 ) && (data_map[rightdown]!=occupied_pixel))
+  {
+    FloodfillFrontiers(rightdown,  free_pixel , replacement, data_map, info_map );
+  }
 
-
-// }
+  return data_frontier; 
+ }
 
 
 
@@ -321,8 +370,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         pixel_checked = ExistedFrontier(i); 
 
         if (pixel_checked==false) {
-          SeachringFrontiers( data, info_old , i);
-          NewMap.data[i] =100;
+          //SeachringFrontiers( data, info_old , i);
+          //NewMap.data[i] =100;
+          FloodfillFrontiers(i,  free_pixel , replacement, data, info_old );
         }
       }
 
@@ -343,8 +393,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         pixel_checked = ExistedFrontier(i);
 
         if (pixel_checked==false) {
-          SeachringFrontiers( data, info_old , i);
-          NewMap.data[i] =100;
+          //SeachringFrontiers( data, info_old , i);
+          //NewMap.data[i] = 100;
+          FloodfillFrontiers(i,  free_pixel , replacement, data, info_old );
         }
       }
 
@@ -365,8 +416,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         pixel_checked = ExistedFrontier(i);
 
         if (pixel_checked==false) {
-          SeachringFrontiers( data, info_old , i);
-          NewMap.data[i] =100;
+          //SeachringFrontiers( data, info_old , i);
+          //NewMap.data[i] = 100;
+          FloodfillFrontiers(i,  free_pixel , replacement, data, info_old );
         }
       }
       continue;
@@ -383,8 +435,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         pixel_checked = ExistedFrontier(i);
 
         if (pixel_checked==false) {
-          SeachringFrontiers( data, info_old , i);
-          NewMap.data[i] =100;
+          //SeachringFrontiers( data, info_old , i);
+          NewMap.data[i] = 100;
+          FloodfillFrontiers(i,  free_pixel , replacement, data, info_old );
         }
       }
 
@@ -406,8 +459,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         pixel_checked = ExistedFrontier(i);
 
         if (pixel_checked==false) {
-          SeachringFrontiers( data, info_old , i);
-          NewMap.data[i] =100;
+          //SeachringFrontiers( data, info_old , i);
+          //NewMap.data[i] = 100;
+          FloodfillFrontiers(i,  free_pixel , replacement, data, info_old );
         }
       }
 
@@ -428,8 +482,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         pixel_checked = ExistedFrontier(i);
 
         if (pixel_checked==false) {
-          SeachringFrontiers( data, info_old , i);
-          NewMap.data[i] =100;
+          //SeachringFrontiers( data, info_old , i);
+          //NewMap.data[i] = 100;
+          FloodfillFrontiers(i,  free_pixel , replacement, data, info_old );
         }
       }
 
@@ -450,8 +505,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         pixel_checked = ExistedFrontier(i);
 
         if (pixel_checked==false) {
-          SeachringFrontiers( data, info_old , i);
-          NewMap.data[i] =100;
+          //SeachringFrontiers( data, info_old , i);
+          //NewMap.data[i] = 100;
+          FloodfillFrontiers(i,  free_pixel , replacement, data, info_old );
         }
       }
 
@@ -471,8 +527,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         pixel_checked = ExistedFrontier(i);
 
         if (pixel_checked==false) {
-          SeachringFrontiers( data, info_old , i);
-          NewMap.data[i] =100;
+          //SeachringFrontiers( data, info_old , i);
+          //NewMap.data[i] = 100;
+          FloodfillFrontiers(i,  free_pixel , replacement, data, info_old );
         }
       }
 
@@ -491,8 +548,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
       pixel_checked = ExistedFrontier(i);
 
       if (pixel_checked==false) {
-        SeachringFrontiers( data, info_old , i);
-        NewMap.data[i] =100;
+        //SeachringFrontiers( data, info_old , i);
+        //NewMap.data[i] = 100;
+        FloodfillFrontiers(i,  free_pixel , replacement, data, info_old );
       }
     }
 
