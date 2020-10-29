@@ -29,40 +29,39 @@ using namespace std;
 class Frontiers {
 
   private:
-    std:: vector< int> pixel_length;
+    std:: vector< int> pixels;
     int number_of_pixel;
     int number_of_diagonals;
 
   public:
 
     Frontiers(){
-      cout << "object created" <<endl;
+      //cout << "object created" <<endl;
       number_of_pixel = 0;
       number_of_diagonals = 0;
 
     }
 
-    void delete_pixel_length(){
-
-      pixel_length.clear();
+    void delete_pixels(){
+      pixels.clear();
     }
     
-    void set_pixel_length( int pos){
-      pixel_length.push_back(pos);
+    void set_pixels( int pos){
+      pixels.push_back(pos);
 
     }
 
-    void print_pixel_length(){
-      for (int i = 0; i < pixel_length.size(); i++)
+    void print_pixels(){
+      for (int i = 0; i < pixels.size(); i++)
       {
-        cout<< "Pixel in the Frontiers are: \n"<< pixel_length[i] <<endl;
+        cout<< "Pixel in the Frontiers are: \n"<< pixels[i] <<endl;
       }
     }
     
     bool pixel_item_exists(int number){
-      for (int j = 0; j < pixel_length.size(); j++)
+      for (int j = 0; j < pixels.size(); j++)
       { 
-        if(pixel_length[j]==number){
+        if(pixels[j]==number){
           //cout<< "Pixel is in Frontiers " << endl;
           return true;
         }
@@ -72,7 +71,7 @@ class Frontiers {
     }
 
     int get_pixel_size(){
-      number_of_pixel = pixel_length.size();
+      number_of_pixel = pixels.size();
       return number_of_pixel;
     }
 
@@ -86,7 +85,7 @@ class Frontiers {
       
     int get_pixel(int index)
   {
-    return pixel_length[index];
+    return pixels[index];
   }
 
 };
@@ -101,101 +100,28 @@ std::vector <Frontiers> every_frontier;
 int anze=0;
 int replacement =10;
 nav_msgs:: OccupancyGrid FrontierMap;
-// FrontierMap.header;   
-// FrontierMap.info;
-// FrontierMap.data;
 
-//Function for the received map data
+
+//Function for the received map data with the parameter nav_msgs --> OccupancyGrid
 void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg);
 
+bool PixelIsFrontier (int currentpos, std::vector<signed char> data_current, nav_msgs::MapMetaData info_current){
 
+  if( (data_current[currentpos]==free_pixel)  && ( (data_current[currentpos-1] == unexplored_pixel) || 
+      (data_current[currentpos+1] == unexplored_pixel) || (data_current[currentpos - info_current.width]==unexplored_pixel)|| 
+      (data_current[currentpos + info_current.width]==unexplored_pixel)  ) )
+  {
 
-//Parameter std::vector with the mapdata, nav msgs:: mapinfo and the Position of the Pixel
-void SeachringFrontiers( std::vector<signed char> data_map, nav_msgs::MapMetaData info_map , int counter)
-{
-  int right = counter + 1;
-  int left = counter - 1;
-  int up = counter - info_map.width;
-  int down = counter + info_map.width;
-  int leftup = counter - info_map.width-1;
-  int rightup = counter  - info_map.width+1;
-  int leftdown = counter + info_map.width-1;
-  int rightdown = counter  + info_map.width+1;
-  Frontiers collectedfrontiers;
-  
-  collectedfrontiers.set_pixel_length(counter);
-  
-
-  cout << "Start to look for frontiers:\n" << endl;
-  
-  //Loop for the Frontier pixels in the right-line  
-   while (( right % info_map.width != info_map.width -1)  && (data_map[right]!=occupied_pixel)){
-    //cout << "rechts" << endl;
-    collectedfrontiers.set_pixel_length(right);
-    right++;
-    }
-
-
-  //Loop for the Frontier pixels in the left-line
-  while (( left % info_map.width != 0 ) && (data_map[left]!=occupied_pixel)){
-    collectedfrontiers.set_pixel_length(left);
-    //cout << "links" << endl;
-    left--;
-  } 
-
-  
-  //Loop for the Frontier pixels in the up-column
-  while ( ( up >= info_map.width -1 ) && (data_map[up]!=occupied_pixel)){
-    collectedfrontiers.set_pixel_length(up);
-    //cout << "oben" << endl;
-    up = up - info_map.width;
+    return true;
   }
 
-  //Loop for the Frontier pixels in the down-column
-  while (( down <= info_map.width * info_map.height-1 ) && (data_map[down]!=occupied_pixel)){
-    collectedfrontiers.set_pixel_length(down);
-    //cout << "unten" << endl;
-    down = down + info_map.width;
-  } 
-  
-  //Loop for the Frontier pixels in the left-up-diagonal-line
-  while (( leftup >= info_map.width -1 ) && (data_map[leftup]!=occupied_pixel)){
-    collectedfrontiers.set_pixel_length(leftup);
-    leftup = leftup - info_map.width-1;
-    //cout << "linksoben" << endl;
-    collectedfrontiers.diagonal_registered();
+  else
+  {
+    return false;
   }
-  
-  //Loop for the Frontier pixels in the right-up-diagonal-line
-  while (( rightup >= info_map.width -1 ) && (data_map[rightup]!=occupied_pixel)){
-    collectedfrontiers.set_pixel_length(rightup);
-    rightup = rightup - info_map.width+1;
-    //cout << "rechtsoben" << endl;
-    collectedfrontiers.diagonal_registered();
-  } 
 
-  //Loop for the Frontier pixels in the left-down-diagonal-line
-  while (( leftdown <= info_map.width * info_map.height-1 ) && (data_map[leftdown]!=occupied_pixel)) {
-    collectedfrontiers.set_pixel_length(leftdown);
-    leftdown = leftdown + info_map.width-1;
-    //cout << "linksunten" << endl;
-    collectedfrontiers.diagonal_registered();
-  }
- 
-  //Loop for the Frontier pixels in the Right-down-diagonal-line
-  while (( rightdown <= info_map.width * info_map.height-1 ) && (data_map[rightdown]!=occupied_pixel)){
-    collectedfrontiers.set_pixel_length(rightdown);
-    rightdown = rightdown + info_map.width+1;
-    //cout << "rechtsunten" << endl;
-    collectedfrontiers.diagonal_registered();
-  } 
-  anze++;
-  every_frontier.push_back(collectedfrontiers);
-  cout << "All Frontiers of the Pixel "<< counter << " were found: \n" << endl;
-  cout<< "Anzahl der Aufrufe " << anze << endl;
-  //collectedfrontiers.print_pixel_length();     
-        
 }
+
 
 bool ExistedFrontier (int position){
      
@@ -255,10 +181,9 @@ Frontiers FloodfillFrontiers(int counter, std::vector<signed char> data_map, nav
   int rightdown = counter  + info_map.width+1;
   Frontiers collectedfrontiers = transfer;
   
-  FrontierMap.info = info_map;
-  FrontierMap.data = data_map;
 
-  collectedfrontiers.set_pixel_length(counter);
+
+  collectedfrontiers.set_pixels(counter);
 
   anze++;
   cout << anze <<". Rekursion" << endl;
@@ -279,60 +204,52 @@ Frontiers FloodfillFrontiers(int counter, std::vector<signed char> data_map, nav
     FrontierMap.data[counter] = replacement;
    }
   
-  if  ( (right % info_map.width != info_map.width -1)  &&  (FrontierMap.data[right]==free_pixel)  && ( (FrontierMap.data[right+1] == unexplored_pixel)
-      || (FrontierMap.data[right - info_map.width]==unexplored_pixel) || (FrontierMap.data[right + info_map.width]==unexplored_pixel)  ) )
+  if  ( (right % info_map.width != info_map.width -1) &&  (PixelIsFrontier ( right, FrontierMap.data,  FrontierMap.info) ) )
   { 
     //cout << "rechts" << endl;
-    collectedfrontiers=FloodfillFrontiers(right, FrontierMap.data, info_map, collectedfrontiers);
+    collectedfrontiers=FloodfillFrontiers(right, FrontierMap.data, FrontierMap.info, collectedfrontiers);
   }
   
-  if ( ( left % info_map.width != 0 )  &&  (FrontierMap.data[left]==free_pixel) && ( (FrontierMap.data[left-1] == unexplored_pixel )
-      || (FrontierMap.data[left - info_map.width]==unexplored_pixel) || (FrontierMap.data[left + info_map.width]==unexplored_pixel) ) )
+  if ( ( left % info_map.width != 0 )  &&  (PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info) ) )
   { 
     //cout << "links" << endl;
-    collectedfrontiers=FloodfillFrontiers(left, FrontierMap.data, info_map, collectedfrontiers);
+    collectedfrontiers=FloodfillFrontiers(left, FrontierMap.data, FrontierMap.info, collectedfrontiers);
   }
   
-  if ( ( up <= info_map.width -1 )  &&  (FrontierMap.data[up]==free_pixel) && ( (FrontierMap.data[up-info_map.width] == unexplored_pixel )
-      || (FrontierMap.data[up +1]==unexplored_pixel) || (FrontierMap.data[up - 1]==unexplored_pixel) ) )
+  if ( ( up <= info_map.width -1 )  &&  (PixelIsFrontier ( up, FrontierMap.data,  FrontierMap.info) ) ) 
   { 
     //cout << "oben" << endl;
-    collectedfrontiers = FloodfillFrontiers(up, FrontierMap.data, info_map, collectedfrontiers);
+    collectedfrontiers = FloodfillFrontiers(up, FrontierMap.data, FrontierMap.info, collectedfrontiers);
   }
   
-  if  ( ( down >= info_map.width * info_map.height-1 ) &&  (FrontierMap.data[down]==free_pixel)  && ( (FrontierMap.data[down+info_map.width] == unexplored_pixel )
-      || (FrontierMap.data[down +1]==unexplored_pixel) || (FrontierMap.data[down - 1]==unexplored_pixel) ) ) 
+  if  ( ( down >= info_map.width * info_map.height-1 ) &&  (PixelIsFrontier ( down, FrontierMap.data,  FrontierMap.info) ) ) 
   { 
     //cout << "unten" << endl;
-    collectedfrontiers = FloodfillFrontiers(down, FrontierMap.data, info_map, collectedfrontiers);
+    collectedfrontiers = FloodfillFrontiers(down, FrontierMap.data, FrontierMap.info, collectedfrontiers);
   }
  
-  if ( ( leftup >= info_map.width -1 ) &&  (FrontierMap.data[leftup]==free_pixel)  && ( (FrontierMap.data[leftup+info_map.width] == unexplored_pixel ) ||
-      (FrontierMap.data[leftup-info_map.width] == unexplored_pixel ) || (FrontierMap.data[leftup +1]==unexplored_pixel) || (FrontierMap.data[leftup - 1]==unexplored_pixel) ) ) 
+  if ( ( leftup >= info_map.width -1 ) &&  (PixelIsFrontier ( leftup, FrontierMap.data,  FrontierMap.info) ) ) 
   { 
     //cout << "linksoben" << endl;
-    collectedfrontiers = FloodfillFrontiers(leftup, FrontierMap.data, info_map, collectedfrontiers);
+    collectedfrontiers = FloodfillFrontiers(leftup, FrontierMap.data, FrontierMap.info, collectedfrontiers);
   }
 
-  if ( ( rightup >= info_map.width -1 ) &&  (FrontierMap.data[rightup]==free_pixel) && ( (FrontierMap.data[rightup+info_map.width] == unexplored_pixel ) ||
-      (FrontierMap.data[rightup-info_map.width] == unexplored_pixel ) || (FrontierMap.data[rightup +1]==unexplored_pixel) || (FrontierMap.data[rightup - 1]==unexplored_pixel) ) ) 
+  if ( ( rightup >= info_map.width -1 ) &&  (PixelIsFrontier ( rightup, FrontierMap.data,  FrontierMap.info) ) ) 
   { 
     //cout << "rechtsoben" << endl;
-    collectedfrontiers = FloodfillFrontiers(rightup, FrontierMap.data, info_map, collectedfrontiers );
+    collectedfrontiers = FloodfillFrontiers(rightup, FrontierMap.data, FrontierMap.info, collectedfrontiers );
   }
   
-   if ( ( leftdown <= info_map.width * info_map.height-1 ) &&  (FrontierMap.data[leftdown]==free_pixel) && ( (FrontierMap.data[leftdown+info_map.width] == unexplored_pixel ) ||
-      (FrontierMap.data[leftdown-info_map.width] == unexplored_pixel ) || (FrontierMap.data[leftdown +1]==unexplored_pixel) || (FrontierMap.data[leftdown - 1]==unexplored_pixel) ) ) 
+   if ( ( leftdown <= info_map.width * info_map.height-1 ) &&  (PixelIsFrontier ( leftdown, FrontierMap.data,  FrontierMap.info) ) ) 
   { 
     //cout << "linksunten" << endl;
-    collectedfrontiers = FloodfillFrontiers(leftdown, FrontierMap.data, info_map,collectedfrontiers );
+    collectedfrontiers = FloodfillFrontiers(leftdown, FrontierMap.data, FrontierMap.info, collectedfrontiers );
   }
   
-  if ( ( rightdown <= info_map.width * info_map.height-1 ) &&  (FrontierMap.data[rightdown]==free_pixel) && ( (FrontierMap.data[rightdown+info_map.width] == unexplored_pixel ) ||
-      (FrontierMap.data[rightdown-info_map.width] == unexplored_pixel ) || (FrontierMap.data[rightdown +1]==unexplored_pixel) || (FrontierMap.data[rightdown - 1]==unexplored_pixel) ) ) 
+  if ( ( rightdown <= info_map.width * info_map.height-1 ) &&  (PixelIsFrontier ( rightdown, FrontierMap.data,  FrontierMap.info) ) ) 
   { 
     //cout << "rechtsunten" << endl;
-    collectedfrontiers= FloodfillFrontiers(rightdown, FrontierMap.data, info_map, collectedfrontiers );
+    collectedfrontiers= FloodfillFrontiers(rightdown, FrontierMap.data, FrontierMap.info, collectedfrontiers );
   }
 
 
@@ -378,9 +295,12 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
   //Saving the parts of the OccupancyGrid in variables --> see documentation: doc.ros.org
   std_msgs::Header header_old = msg->header;
   nav_msgs::MapMetaData info_old = msg->info;
-  std::vector<signed char> data = msg->data;
+  std::vector<signed char> data_old = msg->data;
 
-  FrontierMap.header = header_old; 
+  
+  FrontierMap.header = header_old;
+  FrontierMap.info = info_old;
+  FrontierMap.data = data_old; 
 
   // nav_msgs:: OccupancyGrid NewMap;
   // NewMap.header = header_old;  
@@ -393,7 +313,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
   //Show the height, width and size of the map
   ROS_INFO("Got map %d, %d", info_old.width, info_old.height);
-  ROS_INFO_STREAM("size of map " << data.size());
+  ROS_INFO_STREAM("size of map " << data_old.size());
 
   // 1. routine für abfrage der vier nachbarn schreiben
   // 2. schleife über alle zellen
@@ -415,9 +335,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         if (pixel_checked==false) {
           // SeachringFrontiers( data, info_old , i);
           // NewMap.data[i] =100;
-          addingfrontier = FloodfillFrontiers(i, data, info_old, addingfrontier);
+          addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
           every_frontier.push_back(addingfrontier);
-          addingfrontier.delete_pixel_length();
+          addingfrontier.delete_pixels();
           replacement = replacement + 10;
         }
       }
@@ -441,9 +361,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         if (pixel_checked==false) {
           // SeachringFrontiers( data, info_old , i);
           // NewMap.data[i] = 100;
-          addingfrontier = FloodfillFrontiers(i, data, info_old, addingfrontier);
+          addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
           every_frontier.push_back(addingfrontier);
-          addingfrontier.delete_pixel_length();
+          addingfrontier.delete_pixels();
           replacement = replacement + 10;
         }
       }
@@ -467,10 +387,10 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         if (pixel_checked==false) {
           // SeachringFrontiers( data, info_old , i);
           // NewMap.data[i] = 100;
-          addingfrontier = FloodfillFrontiers(i, data, info_old, addingfrontier);
+          addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
           every_frontier.push_back(addingfrontier);
           replacement = replacement + 10;
-          addingfrontier.delete_pixel_length();
+          addingfrontier.delete_pixels();
         }
       }
 
@@ -493,10 +413,10 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         if (pixel_checked==false) {
           // SeachringFrontiers( data, info_old , i);
           // NewMap.data[i] = 100;
-          addingfrontier = FloodfillFrontiers(i, data, info_old, addingfrontier);
+          addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
           every_frontier.push_back(addingfrontier);
           replacement = replacement + 10;
-          addingfrontier.delete_pixel_length();
+          addingfrontier.delete_pixels();
         }
       }
 
@@ -520,10 +440,10 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         if (pixel_checked==false) {
           // SeachringFrontiers( data, info_old , i);
           // NewMap.data[i] = 100;
-          addingfrontier = FloodfillFrontiers(i, data, info_old, addingfrontier);
+          addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
           every_frontier.push_back(addingfrontier);
           replacement = replacement + 10;
-          addingfrontier.delete_pixel_length();
+          addingfrontier.delete_pixels();
         }
       }
 
@@ -546,10 +466,10 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         if (pixel_checked==false) {
           // SeachringFrontiers( data, info_old , i);
           // NewMap.data[i] = 100;
-          addingfrontier = FloodfillFrontiers(i, data, info_old, addingfrontier);
+          addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
           every_frontier.push_back(addingfrontier);
           replacement = replacement + 10;
-          addingfrontier.delete_pixel_length();
+          addingfrontier.delete_pixels();
         }
       }
 
@@ -572,10 +492,10 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         if (pixel_checked==false) {
           // SeachringFrontiers( data, info_old , i);
           // NewMap.data[i] = 100;
-          addingfrontier = FloodfillFrontiers(i, data, info_old, addingfrontier);
+          addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
           every_frontier.push_back(addingfrontier);
           replacement = replacement + 10;
-          addingfrontier.delete_pixel_length();
+          addingfrontier.delete_pixels();
           
         }
       }
@@ -598,10 +518,10 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         if (pixel_checked==false) {
           // SeachringFrontiers( data, info_old , i);
           // NewMap.data[i] = 100;
-          addingfrontier = FloodfillFrontiers(i, data, info_old, addingfrontier);
+          addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
           every_frontier.push_back(addingfrontier);
           replacement = replacement + 10;
-          addingfrontier.delete_pixel_length();
+          addingfrontier.delete_pixels();
         }
       }
 
@@ -615,16 +535,16 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
     //Other Pixels
 
     // ROS_INFO_STREAM("The neighbours are "<< i-1 <<" " << i-info_old.width <<" "<< i+1 <<" "<< i+info_old.width<<" "<<  "\n"  );
-    if( (msg->data[i] ==free_pixel) &&( (msg->data[i-1] == unexplored_pixel) || (msg->data[i-info_old.width] == unexplored_pixel) ||  (msg->data[i+1] ==unexplored_pixel) || (msg->data[i+info_old.width] ==unexplored_pixel) )){
+    if ( PixelIsFrontier ( i, FrontierMap.data,  FrontierMap.info)  ){
       //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
       pixel_checked = ExistedFrontier(i);
 
       if (pixel_checked==false) {
         // SeachringFrontiers( data, info_old , i);
         // NewMap.data[i] = 100;
-        addingfrontier = FloodfillFrontiers(i, data, info_old, addingfrontier);
+        addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
         every_frontier.push_back(addingfrontier);
-        addingfrontier.delete_pixel_length();
+        addingfrontier.delete_pixels();
         replacement = replacement + 10;
       }
     }
@@ -636,17 +556,16 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
   // Initialization for the ROS-Publisher to publish the new map data
   ROS_INFO_STREAM("Publishing the NewMap.\n"  );
-   int test = 50;
   
-     
-   for (int iter = 0; iter < every_frontier.size(); iter++){
-      for (int k = 0; k < every_frontier[iter].get_pixel_size(); k++){
-        FrontierMap.data[every_frontier[iter].get_pixel(k) ] = test;
-     } 
-      test= test + 5;
-      every_frontier[iter].print_pixel_length();
-      cout << "Ende des Frontiers" <<endl;
-   }
+  //  int test = 50;
+  //  for (int iter = 0; iter < every_frontier.size(); iter++){
+  //     for (int k = 0; k < every_frontier[iter].get_pixel_size(); k++){
+  //       FrontierMap.data[every_frontier[iter].get_pixel(k) ] = test;
+  //    } 
+  //     test= test + 10;
+  //     every_frontier[iter].print_pixels();
+  //     cout << "Ende des Frontiers" <<endl;
+  //  }
 
   cout << every_frontier.size() << endl;
 
