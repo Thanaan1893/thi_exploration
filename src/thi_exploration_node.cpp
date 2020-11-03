@@ -98,7 +98,7 @@ int occupied_pixel = 100;
 int unexplored_pixel = -1;
 std::vector <Frontiers> every_frontier;
 int anze=0;
-int replacement =10;
+int replacement = 10;
 nav_msgs:: OccupancyGrid FrontierMap;
 
 
@@ -186,21 +186,21 @@ Frontiers FloodfillFrontiers(int counter, std::vector<signed char> data_map, nav
   collectedfrontiers.set_pixels(counter);
 
   anze++;
-  cout << anze <<". Rekursion" << endl;
+  //cout << anze <<". Rekursion" << endl;
 
    if (FrontierMap.data[counter] == replacement) {
-    cout << "Wenn die gewünschte Farbe im Pixel schon ersetzt wurde" << endl;
+    //cout << "Wenn die gewünschte Farbe im Pixel schon ersetzt wurde" << endl;
     return collectedfrontiers;
   }
 
   else if  ( (FrontierMap.data[counter] != free_pixel ) && (FrontierMap.data[counter] != unexplored_pixel ) ){
-    cout << "Wenn gesuchte Farbe nicht im Pixel steht" << endl;
+    //cout << "Wenn gesuchte Farbe nicht im Pixel steht" << endl;
     return collectedfrontiers;
   }
   
   else { 
-    cout << "Ersetze im Pixel die gewünschte Farbe" << endl;
-    std::cout << "Color: " << replacement << " at index: " << counter << std::endl; 
+    //cout << "Ersetze im Pixel die gewünschte Farbe" << endl;
+    //std::cout << "Color: " << replacement << " at index: " << counter << std::endl; 
     FrontierMap.data[counter] = replacement;
    }
   
@@ -216,13 +216,13 @@ Frontiers FloodfillFrontiers(int counter, std::vector<signed char> data_map, nav
     collectedfrontiers=FloodfillFrontiers(left, FrontierMap.data, FrontierMap.info, collectedfrontiers);
   }
   
-  if ( ( up <= info_map.width -1 )  &&  (PixelIsFrontier ( up, FrontierMap.data,  FrontierMap.info) ) ) 
+  if ( ( up >= info_map.width -1 )  &&  (PixelIsFrontier ( up, FrontierMap.data,  FrontierMap.info) ) ) 
   { 
     //cout << "oben" << endl;
     collectedfrontiers = FloodfillFrontiers(up, FrontierMap.data, FrontierMap.info, collectedfrontiers);
   }
   
-  if  ( ( down >= info_map.width * info_map.height-1 ) &&  (PixelIsFrontier ( down, FrontierMap.data,  FrontierMap.info) ) ) 
+  if  ( ( down <= info_map.width * info_map.height-1 ) &&  (PixelIsFrontier ( down, FrontierMap.data,  FrontierMap.info) ) ) 
   { 
     //cout << "unten" << endl;
     collectedfrontiers = FloodfillFrontiers(down, FrontierMap.data, FrontierMap.info, collectedfrontiers);
@@ -253,7 +253,7 @@ Frontiers FloodfillFrontiers(int counter, std::vector<signed char> data_map, nav
   }
 
 
-  cout << anze <<". Rekursion beendet" << endl;
+  //cout << anze <<". Rekursion beendet" << endl;
  
   return collectedfrontiers; 
  }
@@ -278,6 +278,7 @@ int main( int argc, char ** argv)
 
   // Initialization for the ROS-Subscriber to subscribe the map data
   ros::Subscriber map_sub = nh.subscribe("gmapping/map", 1, mapCallback);
+  //ros::Subscriber map_sub = nh.subscribe("map", 1, mapCallback);
 
   // Initialization for the ROS-Publisher to publish the new map data
   map_pub = nh.advertise<nav_msgs::OccupancyGrid>("frontier_exploration",1);
@@ -333,7 +334,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         pixel_checked = ExistedFrontier(i); 
 
         if (pixel_checked==false) {
-          // SeachringFrontiers( data, info_old , i);
           // NewMap.data[i] =100;
           addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
           every_frontier.push_back(addingfrontier);
@@ -359,7 +359,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         pixel_checked = ExistedFrontier(i);
 
         if (pixel_checked==false) {
-          // SeachringFrontiers( data, info_old , i);
           // NewMap.data[i] = 100;
           addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
           every_frontier.push_back(addingfrontier);
@@ -385,7 +384,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         pixel_checked = ExistedFrontier(i);
 
         if (pixel_checked==false) {
-          // SeachringFrontiers( data, info_old , i);
           // NewMap.data[i] = 100;
           addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
           every_frontier.push_back(addingfrontier);
@@ -411,7 +409,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         pixel_checked = ExistedFrontier(i);
 
         if (pixel_checked==false) {
-          // SeachringFrontiers( data, info_old , i);
           // NewMap.data[i] = 100;
           addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
           every_frontier.push_back(addingfrontier);
@@ -438,7 +435,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         pixel_checked = ExistedFrontier(i);
 
         if (pixel_checked==false) {
-          // SeachringFrontiers( data, info_old , i);
           // NewMap.data[i] = 100;
           addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
           every_frontier.push_back(addingfrontier);
@@ -464,7 +460,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         pixel_checked = ExistedFrontier(i);
 
         if (pixel_checked==false) {
-          // SeachringFrontiers( data, info_old , i);
           // NewMap.data[i] = 100;
           addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
           every_frontier.push_back(addingfrontier);
@@ -490,7 +485,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         pixel_checked = ExistedFrontier(i);
 
         if (pixel_checked==false) {
-          // SeachringFrontiers( data, info_old , i);
           // NewMap.data[i] = 100;
           addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
           every_frontier.push_back(addingfrontier);
@@ -516,7 +510,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         pixel_checked = ExistedFrontier(i);
 
         if (pixel_checked==false) {
-          // SeachringFrontiers( data, info_old , i);
           // NewMap.data[i] = 100;
           addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
           every_frontier.push_back(addingfrontier);
@@ -540,7 +533,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
       pixel_checked = ExistedFrontier(i);
 
       if (pixel_checked==false) {
-        // SeachringFrontiers( data, info_old , i);
         // NewMap.data[i] = 100;
         addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
         every_frontier.push_back(addingfrontier);
@@ -571,11 +563,11 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
   std::cout << FrontierMap.data.size() << std::endl; 
 
-/*  for(size_t i=0 ; i< FrontierMap.data.size() ; i++)
-  {
-    FrontierMap.data[i] = 200; 
-  }
-*/
+  // for(size_t i=0 ; i< FrontierMap.info.width ; i++)
+  // {
+  //   FrontierMap.data[i] = 200; 
+  // }
+
 
   map_pub.publish(FrontierMap);
 }
