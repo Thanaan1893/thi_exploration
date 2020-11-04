@@ -122,6 +122,129 @@ bool PixelIsFrontier (int currentpos, std::vector<signed char> data_current, nav
 
 }
 
+bool IsPixelUpLeftCorner (int corner_up_left, std::vector<signed char> data_up_left, nav_msgs::MapMetaData info_up_left){
+
+  if(corner_up_left == 0){
+
+    if( (data_up_left[corner_up_left] ==free_pixel) && ( (data_up_left[corner_up_left+1] == unexplored_pixel) || (data_up_left[corner_up_left+info_up_left.width] == unexplored_pixel) ) ){
+
+      return true;
+    }
+  }
+
+  return false;
+
+} 
+
+
+bool IsPixelUpRightCorner (int corner_up_right, std::vector<signed char> data_up_right, nav_msgs::MapMetaData info_up_right){
+
+  if(corner_up_right == info_up_right.width-1){
+
+    if( (data_up_right[corner_up_right] == free_pixel) && ((data_up_right[corner_up_right-1] == unexplored_pixel) || (data_up_right[corner_up_right+info_up_right.width] ==unexplored_pixel) ) ){
+
+      return true;
+    }
+  }
+
+  return false;
+
+}
+
+
+bool IsPixelDownLeftCorner (int corner_down_left, std::vector<signed char> data_down_left, nav_msgs::MapMetaData info_down_left){
+
+
+  if(corner_down_left == info_down_left.width * (info_down_left.height-1)){
+  
+    if( (data_down_left[corner_down_left] == free_pixel) && ( (data_down_left [corner_down_left-info_down_left.width] == unexplored_pixel) || (data_down_left[corner_down_left+1] == unexplored_pixel))){
+
+      return true;
+    }
+  }
+
+  return false;
+
+}
+
+
+
+bool IsPixelDownRightCorner (int corner_down_right, std::vector<signed char> data_down_right, nav_msgs::MapMetaData info_down_right){
+
+  if(corner_down_right == info_down_right.width * info_down_right.height-1 ){
+
+    if( (data_down_right[corner_down_right] == free_pixel) && ((data_down_right[corner_down_right-1] == unexplored_pixel) || (data_down_right[corner_down_right-info_down_right.width] == unexplored_pixel) ) ){
+
+      return true;
+    }
+  }
+
+  return false;
+
+}
+
+
+bool IsPixelFirstLine (int first_line, std::vector<signed char> data_first_line, nav_msgs::MapMetaData info_first_line){
+
+  if( (first_line<info_first_line.width-1)&&(first_line!=0) ){
+
+    if( (data_first_line[first_line] == free_pixel) && ((data_first_line[first_line-1] ==unexplored_pixel) || (data_first_line[first_line+1] ==unexplored_pixel) || (data_first_line[first_line+info_first_line.width] ==unexplored_pixel) ) ){
+
+      return true;
+    }
+  }
+
+  return false;
+
+}
+
+
+bool IsPixelLastLine (int last_line, std::vector<signed char> data_last_line, nav_msgs::MapMetaData info_last_line){
+
+  if( (last_line >info_last_line.width *(info_last_line.height-1)) && (last_line< info_last_line.width * info_last_line.height-1) ){
+
+    if( (data_last_line[last_line] ==free_pixel) && ((data_last_line[last_line-1] ==unexplored_pixel) || (data_last_line[last_line-info_last_line.width] ==unexplored_pixel) || (data_last_line[last_line+1] ==unexplored_pixel) ) ){
+
+    return true;
+    }
+  }
+
+  return false;
+
+}
+
+
+bool IsPixelFirstColumn (int first_column, std::vector<signed char> data_first_column, nav_msgs::MapMetaData info_first_column){
+
+  if( (first_column % info_first_column.width == 0) && (first_column!=0) && (first_column != info_first_column.width * (info_first_column.height-1) ) ){
+
+    if  ( (data_first_column[first_column] ==free_pixel) &&( (data_first_column[first_column-info_first_column.width] ==unexplored_pixel) || (data_first_column[first_column+1] == unexplored_pixel) || (data_first_column[first_column+info_first_column.width] == unexplored_pixel))){
+
+    return true;
+    }
+
+  }
+
+  return false;
+
+}
+
+
+bool IsPixelLastColumn (int last_column, std::vector<signed char> data_last_column, nav_msgs::MapMetaData info_last_column){
+
+  if( (last_column % info_last_column.width == info_last_column.width -1) && (last_column!=info_last_column.width-1) && (last_column != info_last_column.width * info_last_column.height -1)){
+
+      if( (data_last_column[last_column] ==free_pixel) && ((data_last_column[last_column-info_last_column.width] ==unexplored_pixel) || (data_last_column[last_column-1] ==unexplored_pixel) ||  (data_last_column[last_column+1] ==unexplored_pixel) )){
+
+      return true;
+    }
+  }
+
+  return false;
+
+}
+
+
 
 bool ExistedFrontier (int position){
      
@@ -204,52 +327,273 @@ Frontiers FloodfillFrontiers(int counter, std::vector<signed char> data_map, nav
     FrontierMap.data[counter] = replacement;
    }
   
-  if  ( (right % info_map.width != info_map.width -1) &&  (PixelIsFrontier ( right, FrontierMap.data,  FrontierMap.info) ) )
+  if  ( (right % info_map.width != info_map.width -1)  ) 
   { 
-    //cout << "rechts" << endl;
-    collectedfrontiers=FloodfillFrontiers(right, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    if ( IsPixelUpRightCorner(right, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "rechts" << endl;
+      collectedfrontiers=FloodfillFrontiers(right, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelDownRightCorner(right, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "rechts" << endl;
+      collectedfrontiers=FloodfillFrontiers(right, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelLastLine(right, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "rechts" << endl;
+      collectedfrontiers=FloodfillFrontiers(right, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelFirstLine(right, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "rechts" << endl;
+      collectedfrontiers=FloodfillFrontiers(right, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+    
+    else if ( IsPixelLastColumn(right, FrontierMap.data, FrontierMap.info)== true)
+    { 
+      //cout << "rechts" << endl;
+      collectedfrontiers=FloodfillFrontiers(right, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if (  PixelIsFrontier ( right, FrontierMap.data,  FrontierMap.info)){
+
+      //cout << "rechts" << endl;
+      collectedfrontiers=FloodfillFrontiers(right, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
   }
   
-  if ( ( left % info_map.width != 0 )  &&  (PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info) ) )
+  
+  if  ( left % info_map.width != 0 ) 
   { 
-    //cout << "links" << endl;
-    collectedfrontiers=FloodfillFrontiers(left, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    if ( IsPixelUpLeftCorner(left, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "links" << endl;
+      collectedfrontiers=FloodfillFrontiers(left, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelDownLeftCorner(left, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "links" << endl;
+      collectedfrontiers=FloodfillFrontiers(left, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelLastLine(left, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "links" << endl;
+      collectedfrontiers=FloodfillFrontiers(left, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelFirstColumn(left, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "links" << endl;
+      collectedfrontiers=FloodfillFrontiers(left, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+    
+    else if ( IsPixelLastLine(left, FrontierMap.data, FrontierMap.info)== true)
+    { 
+      //cout << "links" << endl;
+      collectedfrontiers=FloodfillFrontiers(left, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if (  PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info)){
+
+      //cout << "links" << endl;
+      collectedfrontiers=FloodfillFrontiers(left, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
   }
   
-  if ( ( up >= info_map.width -1 )  &&  (PixelIsFrontier ( up, FrontierMap.data,  FrontierMap.info) ) ) 
+
+  if  ( up >= info_map.width -1 )   
   { 
-    //cout << "oben" << endl;
-    collectedfrontiers = FloodfillFrontiers(up, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    if ( IsPixelUpLeftCorner(up, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "oben" << endl;
+      collectedfrontiers=FloodfillFrontiers(up, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelUpRightCorner(up, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "oben" << endl;
+      collectedfrontiers=FloodfillFrontiers(up, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelFirstLine(up, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "oben" << endl;
+      collectedfrontiers=FloodfillFrontiers(up, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelFirstColumn(up, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "oben" << endl;
+      collectedfrontiers=FloodfillFrontiers(up, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+    
+    else if ( IsPixelLastColumn(up, FrontierMap.data, FrontierMap.info)== true)
+    { 
+      //cout << "oben" << endl;
+      collectedfrontiers=FloodfillFrontiers(up, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if (  PixelIsFrontier ( up, FrontierMap.data,  FrontierMap.info)){
+
+      //cout << "oben" << endl;
+      collectedfrontiers=FloodfillFrontiers(up, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
   }
   
-  if  ( ( down <= info_map.width * info_map.height-1 ) &&  (PixelIsFrontier ( down, FrontierMap.data,  FrontierMap.info) ) ) 
+
+  if   ( down <= info_map.width * info_map.height-1 )  
   { 
-    //cout << "unten" << endl;
-    collectedfrontiers = FloodfillFrontiers(down, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    if ( IsPixelDownLeftCorner(down, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "unten" << endl;
+      collectedfrontiers=FloodfillFrontiers(down, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelDownRightCorner(down, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "unten" << endl;
+      collectedfrontiers=FloodfillFrontiers(down, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelLastLine(up, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "unten" << endl;
+      collectedfrontiers=FloodfillFrontiers(down, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelFirstColumn(down, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "unten" << endl;
+      collectedfrontiers=FloodfillFrontiers(down, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+    
+    else if ( IsPixelLastColumn(up, FrontierMap.data, FrontierMap.info)== true)
+    { 
+      //cout << "unten" << endl;
+      collectedfrontiers=FloodfillFrontiers(down, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if (  PixelIsFrontier ( down, FrontierMap.data,  FrontierMap.info)){
+
+      //cout << "unten" << endl;
+      collectedfrontiers=FloodfillFrontiers(down, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
   }
  
-  if ( ( leftup >= info_map.width -1 ) &&  (PixelIsFrontier ( leftup, FrontierMap.data,  FrontierMap.info) ) ) 
+
+  if  ( leftup >= info_map.width -1 )  
   { 
-    //cout << "linksoben" << endl;
-    collectedfrontiers = FloodfillFrontiers(leftup, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    if ( IsPixelUpLeftCorner(leftup, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "linksoben" << endl;
+      collectedfrontiers=FloodfillFrontiers(leftup, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelFirstColumn(leftup, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "linksoben" << endl;
+      collectedfrontiers=FloodfillFrontiers(leftup, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelFirstLine(leftup, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "linksoben" << endl;
+      collectedfrontiers=FloodfillFrontiers(leftup, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if (  PixelIsFrontier ( leftup, FrontierMap.data,  FrontierMap.info)){
+
+      //cout << "linksoben" << endl;
+      collectedfrontiers=FloodfillFrontiers(leftup, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
   }
 
-  if ( ( rightup >= info_map.width -1 ) &&  (PixelIsFrontier ( rightup, FrontierMap.data,  FrontierMap.info) ) ) 
+
+  if  ( rightup >= info_map.width -1 )  
   { 
-    //cout << "rechtsoben" << endl;
-    collectedfrontiers = FloodfillFrontiers(rightup, FrontierMap.data, FrontierMap.info, collectedfrontiers );
+    if ( IsPixelUpRightCorner(rightup, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "rechtsoben" << endl;
+      collectedfrontiers=FloodfillFrontiers(rightup, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelLastColumn(rightup, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "rechtsoben" << endl;
+      collectedfrontiers=FloodfillFrontiers(rightup, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelFirstLine(rightup, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "rechtsoben" << endl;
+      collectedfrontiers=FloodfillFrontiers(rightup, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if (  PixelIsFrontier ( rightup, FrontierMap.data,  FrontierMap.info)){
+
+      //cout << "rechtsoben" << endl;
+      collectedfrontiers=FloodfillFrontiers(rightup, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
   }
   
-   if ( ( leftdown <= info_map.width * info_map.height-1 ) &&  (PixelIsFrontier ( leftdown, FrontierMap.data,  FrontierMap.info) ) ) 
+   if  ( leftdown <= info_map.width * info_map.height-1 )  
   { 
-    //cout << "linksunten" << endl;
-    collectedfrontiers = FloodfillFrontiers(leftdown, FrontierMap.data, FrontierMap.info, collectedfrontiers );
+    if ( IsPixelDownLeftCorner(leftdown, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "linksunten" << endl;
+      collectedfrontiers=FloodfillFrontiers(leftdown, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelFirstColumn(leftdown, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "linksunten" << endl;
+      collectedfrontiers=FloodfillFrontiers(leftdown, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelLastLine(leftdown, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "linksunten" << endl;
+      collectedfrontiers=FloodfillFrontiers(leftdown, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if (  PixelIsFrontier ( leftdown, FrontierMap.data,  FrontierMap.info)){
+
+      //cout << "linksunten" << endl;
+      collectedfrontiers=FloodfillFrontiers(leftdown, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
   }
   
   if ( ( rightdown <= info_map.width * info_map.height-1 ) &&  (PixelIsFrontier ( rightdown, FrontierMap.data,  FrontierMap.info) ) ) 
   { 
-    //cout << "rechtsunten" << endl;
-    collectedfrontiers= FloodfillFrontiers(rightdown, FrontierMap.data, FrontierMap.info, collectedfrontiers );
+    if ( IsPixelDownRightCorner(rightdown, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "rechtsunten" << endl;
+      collectedfrontiers=FloodfillFrontiers(rightdown, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelLastColumn(rightdown, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "rechtsunten" << endl;
+      collectedfrontiers=FloodfillFrontiers(rightdown, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if ( IsPixelLastLine(rightdown, FrontierMap.data, FrontierMap.info)== true )
+    { 
+      //cout << "rechtsunten" << endl;
+      collectedfrontiers=FloodfillFrontiers(rightdown, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
+
+    else if (  PixelIsFrontier ( rightdown, FrontierMap.data,  FrontierMap.info)){
+
+      //cout << "rechtsunten" << endl;
+      collectedfrontiers=FloodfillFrontiers(rightdown, FrontierMap.data, FrontierMap.info, collectedfrontiers);
+    }
   }
 
 
@@ -326,10 +670,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     //Pixel at the up-left corner
 
-    if(i==0){
+    if( IsPixelUpLeftCorner(i, data_old, info_old) == true){
       //ROS_INFO("The neighbours of the up-left corner are  %d, %d \n", i+1 , i+info_old.width);
 
-      if( (msg->data[i] ==free_pixel) && ((msg->data[i+1] ==unexplored_pixel) || (msg->data[i+info_old.width] ==unexplored_pixel) )){
         //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
         pixel_checked = ExistedFrontier(i); 
 
@@ -340,7 +683,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
           addingfrontier.delete_pixels();
           replacement = replacement + 10;
         }
-      }
+      
 
       else{
         // NewMap.data[i] =0;
@@ -351,10 +694,10 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     //Pixel at the up-right corner
 
-    if(i==info_old.width-1){
+    if(IsPixelUpRightCorner(i, data_old, info_old) == true){
       //ROS_INFO("The neighbours of the up-right corner are  %d, %d \n", i-1,  i+info_old.width);
 
-      if( (msg->data[i] ==free_pixel) && ((msg->data[i-1] ==unexplored_pixel) || (msg->data[i+info_old.width] ==unexplored_pixel))){
+
         //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
         pixel_checked = ExistedFrontier(i);
 
@@ -365,7 +708,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
           addingfrontier.delete_pixels();
           replacement = replacement + 10;
         }
-      }
+      
 
       else {
         // NewMap.data[i] =0;
@@ -376,10 +719,10 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
        
     //Pixels in the first line--> not included the up left/ up-right corner
 
-    if( (i<info_old.width-1)&&(i!=0) ){
+    if( IsPixelFirstLine (i, data_old, info_old) == true){
       //ROS_INFO("The neighbours in the first line (without up left/right corner) are  %d, %d, %d \n", i-1, i+1 , i+info_old.width);
         
-      if( (msg->data[i] ==free_pixel) && ((msg->data[i-1] ==unexplored_pixel) || (msg->data[i+1] ==unexplored_pixel) || (msg->data[i+info_old.width] ==unexplored_pixel))){
+
         //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
         pixel_checked = ExistedFrontier(i);
 
@@ -390,7 +733,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
           replacement = replacement + 10;
           addingfrontier.delete_pixels();
         }
-      }
+      
 
       else{
         // NewMap.data[i] =0;
@@ -401,10 +744,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     // Pixels in the first column --> not included up-left / down left corner
 
-    if( (i % info_old.width == 0) && (i!=0) && (i != info_old.width * (info_old.height-1) ) ){
+    if( IsPixelFirstColumn (i, data_old, info_old) == true){
       //ROS_INFO("The neighbours  in the first column (wihtout up/down left corner) are  %d, %d, %d \n", i-info_old.width, i+1, i+info_old.width  );
           
-      if( (msg->data[i] ==free_pixel) &&( (msg->data[i-info_old.width] ==unexplored_pixel) || (msg->data[i+1] ==unexplored_pixel) || (msg->data[i+info_old.width] ==unexplored_pixel))){
         //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
         pixel_checked = ExistedFrontier(i);
 
@@ -415,7 +757,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
           replacement = replacement + 10;
           addingfrontier.delete_pixels();
         }
-      }
 
       else{
         // NewMap.data[i] =0;
@@ -427,10 +768,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
     
     // Pixel at the down-left corner
 
-    if(i == info_old.width * (info_old.height-1)){
+    if(IsPixelDownRightCorner (i, data_old, info_old) == true){
       //ROS_INFO("The neighbours of the down-left corner are  %d, %d \n", i-info_old.width, i+1  );
 
-      if( (msg->data[i] ==free_pixel) && ((msg->data[i-info_old.width] ==unexplored_pixel) || (msg->data[i+1] ==unexplored_pixel)) ){
         //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
         pixel_checked = ExistedFrontier(i);
 
@@ -441,7 +781,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
           replacement = replacement + 10;
           addingfrontier.delete_pixels();
         }
-      }
+      
 
       else{
         // NewMap.data[i] =0;
@@ -452,10 +792,10 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     // Pixels in the last line--> not included the down-left / down right corner
 
-    if( (i>info_old.width *(info_old.height-1)) && (i< info_old.width *info_old.height-1) ){
+    if( IsPixelLastLine (i, data_old, info_old) == true ){
       //ROS_INFO("The neighbours in the last line (without down-left/right corner) are  %d, %d, %d \n", i-1,  i-info_old.width, i+1 );
         
-      if( (msg->data[i] ==free_pixel) && ((msg->data[i-1] ==unexplored_pixel) || (msg->data[i-info_old.width] ==unexplored_pixel) || (msg->data[i+1] ==unexplored_pixel) ) ){
+
         //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
         pixel_checked = ExistedFrontier(i);
 
@@ -466,7 +806,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
           replacement = replacement + 10;
           addingfrontier.delete_pixels();
         }
-      }
+      
 
       else{
         // NewMap.data[i] =0;
@@ -477,10 +817,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     // Pixels in the last column --> not included the up-right / down right corner
 
-    if ( (i % info_old.width == info_old.width -1) && (i!=info_old.width-1) && (i != info_old.width * info_old.height -1) ){
+    if ( IsPixelLastColumn (i, data_old, info_old) == true  ){
       //ROS_INFO("The neighbours in the last column (without up/down right corner) are  %d, %d, %d \n", i-info_old.width, i-1, i+info_old.width  );
        
-      if( (msg->data[i] ==free_pixel) && ((msg->data[i-info_old.width] ==unexplored_pixel) || (msg->data[i-1] ==unexplored_pixel) ||  (msg->data[i+1] ==unexplored_pixel) )){
         //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
         pixel_checked = ExistedFrontier(i);
 
@@ -492,7 +831,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
           addingfrontier.delete_pixels();
           
         }
-      }
+      
 
       else{
         //  NewMap.data[i] =0;
@@ -502,10 +841,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     //Pixel at the down-right corner
 
-    if(i == info_old.width * info_old.height -1){
+    if(IsPixelDownRightCorner (i, data_old, info_old) == true ){
       //ROS_INFO_STREAM("The neighbours are of the down-right corner " << i-1 << " " << i-info_old.width << "\n");
       
-      if( (msg->data[i] ==free_pixel) && ((msg->data[i-1] ==unexplored_pixel) || (msg->data[i-info_old.width] ==unexplored_pixel) )){
         //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
         pixel_checked = ExistedFrontier(i);
 
@@ -516,7 +854,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
           replacement = replacement + 10;
           addingfrontier.delete_pixels();
         }
-      }
+      
 
       else{
         // NewMap.data[i] =0;
