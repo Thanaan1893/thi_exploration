@@ -4,6 +4,8 @@
 // Including the ROS libary
 #include <ros/ros.h>
 
+#include <visualization_msgs/Marker.h>
+
 //Including Move-Base and action libary-->Navigtion Stack  
 #include <move_base/move_base.h>
 #include <move_base_msgs/MoveBaseAction.h>
@@ -19,6 +21,7 @@
 
 // Creating a convenience typedef for a SimpleActionClient; For communication with the MoveBaseAction action interface.
 // typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+
 
 using namespace std;
 
@@ -48,6 +51,10 @@ class Frontiers {
 
     void delete_pixels(){
       pixels.clear();
+      xpos.clear();
+      ypos.clear();
+      gravity_of_center_x = 0;
+      gravity_of_center_y = 0;
     }
     
     void set_pixels( int pos){
@@ -62,6 +69,8 @@ class Frontiers {
         cout<< "Pixel in x coordinate: "<< xpos[i] <<endl;
         cout<< "Pixel in y_coordinate: "<< ypos[i] <<endl;
       }
+        cout<< "gravity_of_center x coordinate: "<< gravity_of_center_x <<endl;
+        cout<< "gravity_of_center y_coordinate: "<< gravity_of_center_y <<endl;
     }
     
     bool pixel_item_exists(int number){
@@ -124,6 +133,7 @@ class Frontiers {
 // global variables
 //!< global variable to publish map
 ros::Publisher map_pub;
+ros::Publisher vis_pub;
 int free_pixel = 0;
 int occupied_pixel = 100;
 int unexplored_pixel = -1;
@@ -133,8 +143,11 @@ int replacement = 10;
 nav_msgs:: OccupancyGrid FrontierMap;
 
 
+
+
 //Function for the received map data with the parameter nav_msgs --> OccupancyGrid
 void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg);
+void vizCallback();
 
 bool PixelIsFrontier (int currentpos, std::vector<signed char> data_current, nav_msgs::MapMetaData info_current){
 
@@ -658,7 +671,32 @@ int main( int argc, char ** argv)
 
   // Initialization for the ROS-Publisher to publish the new map data
   map_pub = nh.advertise<nav_msgs::OccupancyGrid>("frontier_exploration",1);
-  
+
+  // vis_pub = nh.advertise<visualization_msgs::Marker>( "visualization_marker", 1); 
+  // visualization_msgs::Marker marker;
+  // marker.header.frame_id = "base_link";
+  // marker.header.stamp = ros::Time();
+  // marker.ns = "my_namespace";
+  // marker.id = 0;
+  // marker.type = visualization_msgs::Marker::SPHERE;
+  // marker.action = visualization_msgs::Marker::ADD;
+  // marker.pose.position.x = 1.0;
+  // marker.pose.position.y = 1.0;
+  // marker.pose.position.z = 0.0;
+  // marker.pose.orientation.x = 0.0;
+  // marker.pose.orientation.y = 0.0;
+  // marker.pose.orientation.z = 0.0;
+  // marker.pose.orientation.w = 1.0;
+  // marker.scale.x = 5.0;
+  // marker.scale.y = 5.0;
+  // marker.scale.z = 5.0;
+  // marker.color.a = 1.0; // Don't forget to set the alpha!
+  // marker.color.r = 0.0;
+  // marker.color.g = 1.0;
+  // marker.color.b = 0.0;
+  // //only if using a MESH_RESOURCE marker type:
+  // marker.mesh_resource = "package://pr2_description/meshes/base_v0/base.dae";
+  // vis_pub.publish( marker );
 
   ros::spin(); 
   
@@ -704,8 +742,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
       if (pixel_checked==false) {
         addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
-        every_frontier.push_back(addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
+        addingfrontier.calc_gravity_of_center();
+        every_frontier.push_back(addingfrontier);
         addingfrontier.delete_pixels();
         replacement = replacement + 10;
       }
@@ -722,8 +761,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
       if (pixel_checked==false) {
         addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
-        every_frontier.push_back(addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
+        addingfrontier.calc_gravity_of_center();
+        every_frontier.push_back(addingfrontier);
         addingfrontier.delete_pixels();
         replacement = replacement + 10;
       }
@@ -740,8 +780,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
       if (pixel_checked==false) {
         addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
-        every_frontier.push_back(addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
+        addingfrontier.calc_gravity_of_center();
+        every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_pixels();
       }
@@ -759,8 +800,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
       if (pixel_checked==false) {
         addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
-        every_frontier.push_back(addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
+        addingfrontier.calc_gravity_of_center();
+        every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_pixels();
       }
@@ -778,8 +820,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
       if (pixel_checked==false) {
         addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
-        every_frontier.push_back(addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
+        addingfrontier.calc_gravity_of_center();
+        every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_pixels();
       }
@@ -796,8 +839,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
       if (pixel_checked==false) {
         addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
-        every_frontier.push_back(addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
+        addingfrontier.calc_gravity_of_center();
+        every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_pixels();
       }
@@ -814,8 +858,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
       if (pixel_checked==false) {
         addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
-        every_frontier.push_back(addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
+        addingfrontier.calc_gravity_of_center();
+        every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_pixels();
         }
@@ -832,8 +877,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
       if (pixel_checked==false) {
         addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
-        every_frontier.push_back(addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
+        addingfrontier.calc_gravity_of_center();
+        every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_pixels();
       }
@@ -850,8 +896,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     if (pixel_checked==false) {
       addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
-      every_frontier.push_back(addingfrontier);
       addingfrontier.pixels_x_y_transformation(FrontierMap.info);
+      addingfrontier.calc_gravity_of_center();
+      every_frontier.push_back(addingfrontier);
       addingfrontier.delete_pixels();
       replacement = replacement + 10;
       }
@@ -862,11 +909,11 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
   // Initialization for the ROS-Publisher to publish the new map data
   ROS_INFO_STREAM("Publishing the NewMap.\n"  );
   
-  //   for (int iter = 1; iter < every_frontier.size(); iter++){
+  for (int iter = 1; iter < 2; iter++){
      
-  //     every_frontier[iter].print_pixels();
-  //     cout << "Ende des Frontiers" <<endl;
-  //  }
+    every_frontier[iter].print_pixels();
+    cout << "Ende des Frontiers" <<endl;
+  }
 
   cout << every_frontier.size() << endl;
 
@@ -879,6 +926,8 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
 
   map_pub.publish(FrontierMap);
+
+
 }
 
 
