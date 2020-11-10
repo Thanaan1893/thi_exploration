@@ -33,12 +33,12 @@ class Frontiers {
 
   private:
     std:: vector < int > pixels;
-    std:: vector <  double > xpos;
-    std:: vector < double > ypos;
+    std:: vector <  float > xpos;
+    std:: vector < float > ypos;
     int number_of_pixel;
     int number_of_diagonals;
-    double gravity_of_center_x;
-    double gravity_of_center_y;
+    float gravity_of_center_x;
+    float gravity_of_center_y;
 
   public:
 
@@ -65,9 +65,9 @@ class Frontiers {
     void print_pixels(){
       for (int i = 0; i < pixels.size(); i++)
       {
-        // cout<< "Pixel in the Frontiers are: "<< pixels[i] <<endl;
-        // cout<< "Pixel in x coordinate: "<< xpos[i] <<endl;
-        // cout<< "Pixel in y_coordinate: "<< ypos[i] <<endl;
+        cout<< "Pixel in the Frontiers are: "<< pixels[i] <<endl;
+        cout<< "Pixel in x coordinate: "<< xpos[i] <<endl;
+        cout<< "Pixel in y_coordinate: "<< ypos[i] <<endl;
       }
         cout<< "gravity_of_center x coordinate: "<< gravity_of_center_x <<endl;
         cout<< "gravity_of_center y_coordinate: "<< gravity_of_center_y <<endl;
@@ -103,23 +103,22 @@ class Frontiers {
     return pixels[index];
   }
 
-   double get_gravity_of_center_x()
+   float get_gravity_of_center_x()
   {
     return gravity_of_center_x;
   }
 
-   double get_gravity_of_center_y()
+   float get_gravity_of_center_y()
   {
     return gravity_of_center_y;
   }
 
   void pixels_x_y_transformation (nav_msgs::MapMetaData info_x){
-    double x = 0;
-    double y = 0;
-    uint32_t width=  info_x.width;
+    float x = 0;
+    float y = 0;
     for (int j = 0; j < pixels.size(); j++){
-      x = ( pixels[j] % width) ;
-      y = (pixels[j]  / width) ;
+      x = pixels[j] % info_x.width * info_x.resolution + info_x.origin.position.x;
+      y =  pixels[j]  / info_x.width * info_x.resolution + info_x.origin.position.y;
       xpos.push_back(x);
       ypos.push_back(y);
       // cout<< "Pixel in x coordinate: "<< xpos[j] <<endl;
@@ -129,14 +128,14 @@ class Frontiers {
   }
 
    void calc_gravity_of_center (){
-    double x = 0;
-    double y = 0;
+    float x = 0;
+    float y = 0;
     for (int j = 0; j < pixels.size(); j++){
       x = x + xpos[j];
       y = y + ypos[j];
     }
-    gravity_of_center_x = (x/xpos.size())* 0.05 ;
-    gravity_of_center_y = (y/xpos.size())* 0.05 ;
+    gravity_of_center_x = x/xpos.size() ;
+    gravity_of_center_y = y/xpos.size() ;
   }
 };
 
@@ -158,7 +157,6 @@ nav_msgs:: OccupancyGrid FrontierMap;
 //Function for the received map data with the parameter nav_msgs --> OccupancyGrid
 void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg);
 void sendingcoor(int current);
-//void vizCallback();
 
 bool PixelIsFrontier (int currentpos, std::vector<signed char> data_current, nav_msgs::MapMetaData info_current){
 
@@ -316,7 +314,7 @@ bool ExistedFrontier (int position){
 int BiggestFrontier (){
 
   int size_of_frontier = 0;
-  int frontier_pos =0;
+  int frontier_pos = 0;
   for (int iter = 0; iter < every_frontier.size(); iter++)
   {
     if( every_frontier[iter].get_pixel_size() > size_of_frontier)
@@ -684,38 +682,40 @@ int main( int argc, char ** argv)
   map_pub = nh.advertise<nav_msgs::OccupancyGrid>("frontier_exploration",1);
 
   vis_pub = nh.advertise<visualization_msgs::Marker>( "visualization_marker", 1); 
-  visualization_msgs::Marker marker;
-  marker.header.frame_id = "map";
-  marker.header.stamp = ros::Time();
-  marker.ns = "my_namespace";
-  marker.id = 0;
-  marker.type = visualization_msgs::Marker::SPHERE;
-  marker.action = visualization_msgs::Marker::ADD;
-  marker.pose.position.x = 1.0;
-  marker.pose.position.y = 1.0;
-  marker.pose.position.z = 0.0;
-  marker.pose.orientation.x = 0.0;
-  marker.pose.orientation.y = 0.0;
-  marker.pose.orientation.z = 0.0;
-  marker.pose.orientation.w = 1.0;
-  marker.scale.x = 5.0;
-  marker.scale.y = 5.0;
-  marker.scale.z = 5.0;
-  marker.color.a = 1.0; // Don't forget to set the alpha!
-  marker.color.r = 0.0;
-  marker.color.g = 1.0;
-  marker.color.b = 0.0;
-  //only if using a MESH_RESOURCE marker type:
-  marker.mesh_resource = "package://pr2_description/meshes/base_v0/base.dae";
-  vis_pub.publish( marker );
-  
+  while(ros::ok()){
+    visualization_msgs::Marker marker;
+    marker.header.frame_id = "map";
+    marker.header.stamp = ros::Time();
+    marker.ns = "my_namespace";
+    marker.id = 0;
+    marker.type = visualization_msgs::Marker::SPHERE_LIST;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.orientation.x = 0.0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 1.0;
+    marker.scale.x = 0.1;
+    marker.scale.y = 0.1;
+    marker.scale.z = 0.1;
+    marker.color.a = 1.0; // Don't forget to set the alpha!
+    marker.color.r = 0.0;
+    marker.color.g = 1.0;
+    marker.color.b = 0.0;
+    
+    for (int iter = 0; iter < every_frontier.size()  ; iter++){
+      geometry_msgs::Point p;
+      p.x = every_frontier[iter].get_gravity_of_center_x();
+      p.y = every_frontier[iter].get_gravity_of_center_y();
+      p.z = 0.0;
+      marker.points.push_back(p);  
+    }
 
-  
+    ros::spinOnce(); 
+    vis_pub.publish( marker );
+    }
 
- 
+  // ros::spin();
 
-  ros::spin(); 
-  
   return 0;
   
 }
@@ -921,18 +921,13 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
     }
 
   }
-
-   map_pub.publish(FrontierMap);
-
-  // Initialization for the ROS-Publisher to publish the new map data
-  ROS_INFO_STREAM("Publishing the NewMap.\n"  );
-  
-  for (int iter = 0; iter < 2  ; iter++){
+ 
+  // for (int iter = 0; iter < every_frontier.size()  ; iter++){
     
-    every_frontier[iter].print_pixels();
-    cout << "Ende des Frontiers" <<endl;
-    sendingcoor(iter);
-  }
+  //   every_frontier[iter].print_pixels();
+  //   cout << "Ende des Frontiers" <<endl;
+  //   ;
+  // }
 
   cout << every_frontier.size() << endl;
 
@@ -943,10 +938,10 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
   //   FrontierMap.data[i] = 200; 
   // }
 
-
- 
-
-  
+    // Initialization for the ROS-Publisher to publish the new map data
+    map_pub.publish(FrontierMap);
+    ROS_INFO_STREAM("Publishing the NewMap.\n"  );
+    sendingcoor(BiggestFrontier());
 }
 
 
