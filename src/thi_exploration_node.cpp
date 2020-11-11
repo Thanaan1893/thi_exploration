@@ -32,13 +32,14 @@ using namespace std;
 class Frontiers {
 
   private:
-    std:: vector < int > pixels;
-    std:: vector <  float > xpos;
-    std:: vector < float > ypos;
+    std:: vector <int> pixels;
+    std:: vector <float> xpos;
+    std:: vector <float> ypos;
     int number_of_pixel;
     int number_of_diagonals;
     float gravity_of_center_x;
     float gravity_of_center_y;
+    float distance;
 
   public:
 
@@ -55,6 +56,7 @@ class Frontiers {
       ypos.clear();
       gravity_of_center_x = 0;
       gravity_of_center_y = 0;
+      distance = 0;
     }
     
     void set_pixels( int pos){
@@ -113,6 +115,11 @@ class Frontiers {
     return gravity_of_center_y;
   }
 
+  float get_distance()
+  {
+    return distance;
+  }
+
   void pixels_x_y_transformation (nav_msgs::MapMetaData info_x){
     float x = 0;
     float y = 0;
@@ -137,6 +144,11 @@ class Frontiers {
     gravity_of_center_x = x/xpos.size() ;
     gravity_of_center_y = y/xpos.size() ;
   }
+
+  void euclidean_distance (float current_x, float current_y, float future_x , float future_y){
+    distance = sqrt( (current_x-future_x) * (current_x-future_x) + (current_y - future_y) * (current_y - future_y) );
+    cout << "Distanz: " << distance << endl; 
+  } 
 };
 
 // global variables
@@ -157,6 +169,7 @@ nav_msgs:: OccupancyGrid FrontierMap;
 //Function for the received map data with the parameter nav_msgs --> OccupancyGrid
 void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg);
 void sendingcoor(int current);
+
 
 bool PixelIsFrontier (int currentpos, std::vector<signed char> data_current, nav_msgs::MapMetaData info_current){
 
@@ -327,15 +340,15 @@ int BiggestFrontier (){
     return frontier_pos;
 }
 
-int MostDiagonalsFrontier (){
+int LongestDistanceFrontier (){
 
-  int diagonals_of_frontier = 0;
+  int distance_of_frontier = 0;
   int pos_frontier = 0;
   for (int iter = 0; iter < every_frontier.size(); iter++)
   {
-    if( every_frontier[iter].get_diagonals() < diagonals_of_frontier)
-    {
-      diagonals_of_frontier=every_frontier[iter].get_diagonals();
+    if( every_frontier[iter].get_distance() < distance_of_frontier)
+    { 
+      distance_of_frontier=every_frontier[iter].get_distance();
       pos_frontier = iter;
     } 
      
@@ -760,6 +773,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
+        addingfrontier.euclidean_distance ( 2.0, 2.0, addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
         every_frontier.push_back(addingfrontier);
         addingfrontier.delete_pixels();
         replacement = replacement + 10;
@@ -779,6 +793,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
+        addingfrontier.euclidean_distance ( 2.0, 2.0, addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
         every_frontier.push_back(addingfrontier);
         addingfrontier.delete_pixels();
         replacement = replacement + 10;
@@ -798,6 +813,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
+        addingfrontier.euclidean_distance ( 2.0, 2.0, addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
         every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_pixels();
@@ -818,6 +834,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
+        addingfrontier.euclidean_distance ( 2.0, 2.0, addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
         every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_pixels();
@@ -838,6 +855,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
+        addingfrontier.euclidean_distance ( 2.0, 2.0, addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
         every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_pixels();
@@ -857,6 +875,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
+         addingfrontier.euclidean_distance ( 2.0, 2.0, addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
         every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_pixels();
@@ -876,6 +895,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
+        addingfrontier.euclidean_distance ( 2.0, 2.0, addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
         every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_pixels();
@@ -895,6 +915,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
+        addingfrontier.euclidean_distance ( 2.0, 2.0, addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
         every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_pixels();
@@ -914,6 +935,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
       addingfrontier = FloodfillFrontiers(i, FrontierMap.data, FrontierMap.info, addingfrontier);
       addingfrontier.pixels_x_y_transformation(FrontierMap.info);
       addingfrontier.calc_gravity_of_center();
+      addingfrontier.euclidean_distance ( 2.0, 2.0, addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
       every_frontier.push_back(addingfrontier);
       addingfrontier.delete_pixels();
       replacement = replacement + 10;
@@ -922,11 +944,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
   }
  
-  // for (int iter = 0; iter < every_frontier.size()  ; iter++){
-    
+  // for (int iter = 0; iter < every_frontier.size()  ; iter++){  
   //   every_frontier[iter].print_pixels();
-  //   cout << "Ende des Frontiers" <<endl;
-  //   ;
+  //   cout << "Ende des Frontiers" <<endl;  
   // }
 
   cout << every_frontier.size() << endl;
@@ -940,15 +960,14 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     // Initialization for the ROS-Publisher to publish the new map data
     map_pub.publish(FrontierMap);
-    ROS_INFO_STREAM("Publishing the NewMap.\n"  );
-    sendingcoor(BiggestFrontier());
+    ROS_INFO_STREAM("Publishing the NewMap.\n" );
+    sendingcoor(LongestDistanceFrontier());
 }
 
 
 
 void sendingcoor(int current){
 
-double distance = 0.0;
  //tell the action client that we want to spin a thread by default
   MoveBaseClient ac("move_base", true);
    
@@ -973,3 +992,5 @@ double distance = 0.0;
      ROS_INFO("The base failed to move forward 1 meter for some reason");
 
 }
+
+
