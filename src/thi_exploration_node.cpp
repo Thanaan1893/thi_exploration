@@ -163,10 +163,6 @@ class Frontiers {
 ros::Publisher map_pub;
 nav_msgs:: OccupancyGrid FrontierMap;
 //ros::Publisher vis_pub;
-int free_pixel = 0;
-int occupied_pixel = 100;
-int unexplored_pixel = -1;
-
 
 //Function for the received map data with the parameter nav_msgs --> OccupancyGrid
 void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg);
@@ -174,6 +170,10 @@ void sendingcoor(int current, std::vector <Frontiers> every_frontier);
 
 
 bool PixelIsFrontier (int currentpos, std::vector<signed char> data_current, nav_msgs::MapMetaData info_current){
+
+  int free_pixel = 0;
+  int occupied_pixel = 100;
+  int unexplored_pixel = -1;
 
   if( (data_current[currentpos]==free_pixel)  && ( (data_current[currentpos-1] == unexplored_pixel) || 
       (data_current[currentpos+1] == unexplored_pixel) || (data_current[currentpos - info_current.width]==unexplored_pixel)|| 
@@ -193,6 +193,10 @@ bool PixelIsFrontier (int currentpos, std::vector<signed char> data_current, nav
 
 bool IsPixelUpLeftCorner (int corner_up_left, std::vector<signed char> data_up_left, nav_msgs::MapMetaData info_up_left){
 
+  int free_pixel = 0;
+  int occupied_pixel = 100;
+  int unexplored_pixel = -1;
+
   if(corner_up_left == 0){
 
     if( (data_up_left[corner_up_left] ==free_pixel) && ( (data_up_left[corner_up_left+1] == unexplored_pixel) || (data_up_left[corner_up_left+info_up_left.width] == unexplored_pixel) ) ){
@@ -207,6 +211,10 @@ bool IsPixelUpLeftCorner (int corner_up_left, std::vector<signed char> data_up_l
 
 
 bool IsPixelUpRightCorner (int corner_up_right, std::vector<signed char> data_up_right, nav_msgs::MapMetaData info_up_right){
+
+  int free_pixel = 0;
+  int occupied_pixel = 100;
+  int unexplored_pixel = -1;
 
   if(corner_up_right == info_up_right.width-1){
 
@@ -223,6 +231,9 @@ bool IsPixelUpRightCorner (int corner_up_right, std::vector<signed char> data_up
 
 bool IsPixelDownLeftCorner (int corner_down_left, std::vector<signed char> data_down_left, nav_msgs::MapMetaData info_down_left){
 
+  int free_pixel = 0;
+  int occupied_pixel = 100;
+  int unexplored_pixel = -1;
 
   if(corner_down_left == info_down_left.width * (info_down_left.height-1)){
   
@@ -239,6 +250,10 @@ bool IsPixelDownLeftCorner (int corner_down_left, std::vector<signed char> data_
 
 bool IsPixelDownRightCorner (int corner_down_right, std::vector<signed char> data_down_right, nav_msgs::MapMetaData info_down_right){
 
+  int free_pixel = 0;
+  int occupied_pixel = 100;
+  int unexplored_pixel = -1;
+
   if(corner_down_right == info_down_right.width * info_down_right.height-1 ){
 
     if( (data_down_right[corner_down_right] == free_pixel) && ((data_down_right[corner_down_right-1] == unexplored_pixel) || (data_down_right[corner_down_right-info_down_right.width] == unexplored_pixel) ) ){
@@ -253,6 +268,10 @@ bool IsPixelDownRightCorner (int corner_down_right, std::vector<signed char> dat
 
 
 bool IsPixelFirstLine (int first_line, std::vector<signed char> data_first_line, nav_msgs::MapMetaData info_first_line){
+
+  int free_pixel = 0;
+  int occupied_pixel = 100;
+  int unexplored_pixel = -1;
 
   if( (first_line<info_first_line.width-1)&&(first_line!=0) ){
 
@@ -269,6 +288,11 @@ bool IsPixelFirstLine (int first_line, std::vector<signed char> data_first_line,
 
 bool IsPixelLastLine (int last_line, std::vector<signed char> data_last_line, nav_msgs::MapMetaData info_last_line){
 
+  int free_pixel = 0;
+  int occupied_pixel = 100;
+  int unexplored_pixel = -1;
+
+
   if( (last_line >info_last_line.width *(info_last_line.height-1)) && (last_line< info_last_line.width * info_last_line.height-1) ){
 
     if( (data_last_line[last_line] ==free_pixel) && ((data_last_line[last_line-1] ==unexplored_pixel) || (data_last_line[last_line-info_last_line.width] ==unexplored_pixel) || (data_last_line[last_line+1] ==unexplored_pixel) ) ){
@@ -283,6 +307,10 @@ bool IsPixelLastLine (int last_line, std::vector<signed char> data_last_line, na
 
 
 bool IsPixelFirstColumn (int first_column, std::vector<signed char> data_first_column, nav_msgs::MapMetaData info_first_column){
+
+  int free_pixel = 0;
+  int occupied_pixel = 100;
+  int unexplored_pixel = -1;
 
   if( (first_column % info_first_column.width == 0) && (first_column!=0) && (first_column != info_first_column.width * (info_first_column.height-1) ) ){
 
@@ -299,6 +327,10 @@ bool IsPixelFirstColumn (int first_column, std::vector<signed char> data_first_c
 
 
 bool IsPixelLastColumn (int last_column, std::vector<signed char> data_last_column, nav_msgs::MapMetaData info_last_column){
+
+  int free_pixel = 0;
+  int occupied_pixel = 100;
+  int unexplored_pixel = -1;
 
   if( (last_column % info_last_column.width == info_last_column.width -1) && (last_column!=info_last_column.width-1) && (last_column != info_last_column.width * info_last_column.height -1)){
 
@@ -361,7 +393,10 @@ int ShortestDistanceFrontier (std::vector <Frontiers> every_frontier){
 
 Frontiers FloodfillFrontiers(int counter, int substitution, std::vector<signed char> data_map, nav_msgs::MapMetaData info_map,  Frontiers transfer ){
   
-  
+  int free_pixel = 0;
+  int occupied_pixel = 100;
+  int unexplored_pixel = -1;
+
   int right = counter + 1;
   int left = counter - 1;
   int up = counter - info_map.width;
@@ -372,8 +407,6 @@ Frontiers FloodfillFrontiers(int counter, int substitution, std::vector<signed c
   int rightdown = counter  + info_map.width+1;
   Frontiers collectedfrontiers = transfer;
   
-
-
   collectedfrontiers.set_pixels(counter);
 
   //anze++;
@@ -661,7 +694,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
     // Pixels in the first column --> not included up-left / down left corner
 
     if( IsPixelFirstColumn (i, FrontierMap.data, FrontierMap.info) == true){
-
       //ROS_INFO("The neighbours  in the first column (wihtout up/down left corner) are  %d, %d, %d \n", i-info_old.width, i+1, i+info_old.width  );  
       //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
       pixel_checked = ExistedFrontier(i,every_frontier);
