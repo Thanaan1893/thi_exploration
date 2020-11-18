@@ -60,7 +60,7 @@ Visualization Manager:
       Draw Behind: false
       Enabled: true
       Name: Map
-      Topic: /map_from_gmapping
+      Topic: /frontier_exploration
       Unreliable: false
       Use Timestamp: false
       Value: true

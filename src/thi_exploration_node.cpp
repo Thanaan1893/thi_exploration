@@ -5,6 +5,7 @@
 #include <ros/ros.h>
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
+#include <tf/LinearMath/Vector3.h>
 
 #include <visualization_msgs/Marker.h>
 
@@ -37,11 +38,14 @@ class Frontiers {
     std:: vector <int> pixels;
     std:: vector <float> xpos;
     std:: vector <float> ypos;
+    std:: vector <tf::Vector3> orientation_pixels;
     int number_of_pixel;
     int number_of_diagonals;
     float gravity_of_center_x;
     float gravity_of_center_y;
     float distance;
+    float orientation_frontier_x;
+    float orientation_frontier_y;
 
   public:
 
@@ -52,6 +56,8 @@ class Frontiers {
       gravity_of_center_x = 0;
       gravity_of_center_y = 0;
       distance = 0;
+      orientation_frontier_x = 0;
+      orientation_frontier_y = 0;
 
     }
 
@@ -64,6 +70,8 @@ class Frontiers {
       gravity_of_center_x = 0;
       gravity_of_center_y = 0;
       distance = 0;
+      orientation_frontier_x = 0;
+      orientation_frontier_y = 0;
     }
     
     void set_pixels( int pos){
@@ -127,6 +135,15 @@ class Frontiers {
     return distance;
   }
 
+  float get_orientation_frontier_x()
+  {
+    return orientation_frontier_x;
+  }
+  float get_orientation_frontier_y()
+  {
+    return orientation_frontier_y;
+  }
+
   void pixels_x_y_transformation (nav_msgs::MapMetaData info_x){
     float x = 0;
     float y = 0;
@@ -148,21 +165,87 @@ class Frontiers {
       x = x + xpos[j];
       y = y + ypos[j];
     }
-    gravity_of_center_x = x/xpos.size() - 0.5;
-    gravity_of_center_y = y/xpos.size() - 0.5;
+    gravity_of_center_x = x/xpos.size();
+    gravity_of_center_y = y/xpos.size();
   }
 
   void euclidean_distance (float current_x, float current_y, float future_x , float future_y){
     distance = sqrt( (current_x-future_x) * (current_x-future_x) + (current_y - future_y) * (current_y - future_y) );
     //cout << "Distanz: " << distance << endl; 
   } 
+
+  void calc_orientation_pixel(int latest, std::vector<signed char> data_orientation, nav_msgs::MapMetaData info_orientation )
+  {
+    tf::Vector3 latest_orientation (0,0,0);
+    int free_pixel = 0;
+    int occupied_pixel = 100;
+    int unexplored_pixel = -1;
+    
+    //Right
+    if( (latest % info_orientation.width != info_orientation.width -1) && (data_orientation[latest+1]== unexplored_pixel) ){
+      latest_orientation = latest_orientation + tf::Vector3 (1,0,0);
+    }
+
+    //Left
+    if( (latest % info_orientation.width != 0) && (data_orientation[latest-1]== unexplored_pixel) ){
+      latest_orientation = latest_orientation + tf::Vector3 (-1,0,0);
+    }
+
+    //Up   
+    if( (latest>= info_orientation.width -1) && (data_orientation[latest-info_orientation.width]== unexplored_pixel) ){
+      latest_orientation = latest_orientation + tf::Vector3 (0,-1,0);
+    }
+
+    //Down
+    if( (latest<= info_orientation.width * info_orientation.height-1) && (data_orientation[latest+info_orientation.width]== unexplored_pixel) ){
+      latest_orientation = latest_orientation + tf::Vector3 (0,1,0);
+    }
+
+    //LeftUp
+    if( (latest >= info_orientation.width -1) && (data_orientation[latest-info_orientation.width-1]== unexplored_pixel) ){
+      latest_orientation = latest_orientation + tf::Vector3 (-1,-1,0);
+    }
+
+    //RightUp
+    if( (latest >= info_orientation.width -1) && (data_orientation[latest-info_orientation.width+1]== unexplored_pixel) ){
+      latest_orientation = latest_orientation + tf::Vector3 (1,-1,0);
+    }
+
+    //LeftDown
+    if( (latest <= info_orientation.width * info_orientation.height-1) && (data_orientation[latest+info_orientation.width-1]== unexplored_pixel) ){
+      latest_orientation = latest_orientation + tf::Vector3 (-1,1,0);
+    }
+
+    //RightDown
+    if( (latest <= info_orientation.width * info_orientation.height-1) && (data_orientation[latest+info_orientation.width+1]== unexplored_pixel) ){
+      latest_orientation = latest_orientation + tf::Vector3 (1,1,0);
+    }
+    
+    //cout << "x: " << latest_orientation[0] << " y: " << latest_orientation[1] <<" z: " << latest_orientation[2] << endl;
+    orientation_pixels.push_back(latest_orientation);
+  }
+
+  void calc_orientation_frontier(){
+    float sum_x = 0;
+    float sum_y = 0;
+    for (int j = 0; j < orientation_pixels.size(); j++){
+      sum_x = sum_x + orientation_pixels[j][0];
+      sum_y = sum_y + orientation_pixels[j][1];
+    }
+    sum_x = sum_x/ orientation_pixels.size();
+    sum_y = sum_y/ orientation_pixels.size();
+
+    orientation_frontier_x = sum_x;
+    orientation_frontier_y = sum_y;
+  }
+
 };
 
 // global variables
 //!< global variable to publish map
 ros::Publisher map_pub;
 nav_msgs:: OccupancyGrid FrontierMap;
-//ros::Publisher vis_pub;
+ros::Publisher vis_pub;
 
 //Function for the received map data with the parameter nav_msgs --> OccupancyGrid
 void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg);
@@ -377,7 +460,7 @@ int BiggestFrontier (std::vector <Frontiers> every_frontier){
 
 int ShortestDistanceFrontier (std::vector <Frontiers> every_frontier){
 
-  int distance_of_frontier = 0;
+  int distance_of_frontier = every_frontier[0].get_distance();
   int pos_frontier = 0;
   for (int iter = 0; iter < every_frontier.size(); iter++)
   {
@@ -433,6 +516,7 @@ Frontiers FloodfillFrontiers(int counter, int substitution, std::vector<signed c
     if (  PixelIsFrontier ( right, FrontierMap.data,  FrontierMap.info)){
 
       //cout << "rechts" << endl;
+      collectedfrontiers.calc_orientation_pixel(right,  FrontierMap.data, FrontierMap.info );
       collectedfrontiers=FloodfillFrontiers(right, substitution, FrontierMap.data, FrontierMap.info, collectedfrontiers);
     }
   }
@@ -443,6 +527,7 @@ Frontiers FloodfillFrontiers(int counter, int substitution, std::vector<signed c
 if (  PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info)){
 
       //cout << "links" << endl;
+      collectedfrontiers.calc_orientation_pixel(left,  FrontierMap.data, FrontierMap.info );
       collectedfrontiers=FloodfillFrontiers(left, substitution, FrontierMap.data, FrontierMap.info, collectedfrontiers);
     }
   }
@@ -453,6 +538,7 @@ if (  PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info)){
   if (  PixelIsFrontier ( up, FrontierMap.data,  FrontierMap.info)){
 
       //cout << "oben" << endl;
+      collectedfrontiers.calc_orientation_pixel(up,  FrontierMap.data, FrontierMap.info );
       collectedfrontiers=FloodfillFrontiers(up, substitution, FrontierMap.data, FrontierMap.info, collectedfrontiers);
     }
   }
@@ -463,6 +549,7 @@ if (  PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info)){
    if (  PixelIsFrontier ( down, FrontierMap.data,  FrontierMap.info)){
 
       //cout << "unten" << endl;
+      collectedfrontiers.calc_orientation_pixel(down,  FrontierMap.data, FrontierMap.info );
       collectedfrontiers=FloodfillFrontiers(down, substitution, FrontierMap.data, FrontierMap.info, collectedfrontiers);
     }
   }
@@ -473,6 +560,7 @@ if (  PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info)){
  if (  PixelIsFrontier ( leftup, FrontierMap.data,  FrontierMap.info)){
 
       //cout << "linksoben" << endl;
+      collectedfrontiers.calc_orientation_pixel(leftup,  FrontierMap.data, FrontierMap.info );
       collectedfrontiers=FloodfillFrontiers(leftup, substitution, FrontierMap.data, FrontierMap.info, collectedfrontiers);
     }
   }
@@ -483,6 +571,7 @@ if (  PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info)){
   if (  PixelIsFrontier ( rightup, FrontierMap.data,  FrontierMap.info)){
 
       //cout << "rechtsoben" << endl;
+      collectedfrontiers.calc_orientation_pixel(rightup,  FrontierMap.data, FrontierMap.info );
       collectedfrontiers=FloodfillFrontiers(rightup, substitution, FrontierMap.data, FrontierMap.info, collectedfrontiers);
     }
   }
@@ -493,6 +582,7 @@ if (  PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info)){
  if (  PixelIsFrontier ( leftdown, FrontierMap.data,  FrontierMap.info)){
 
       //cout << "linksunten" << endl;
+      collectedfrontiers.calc_orientation_pixel(leftdown,  FrontierMap.data, FrontierMap.info );
       collectedfrontiers=FloodfillFrontiers(leftdown, substitution, FrontierMap.data, FrontierMap.info, collectedfrontiers);
     }
   }
@@ -503,6 +593,7 @@ if (  PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info)){
    if (  PixelIsFrontier ( rightdown, FrontierMap.data,  FrontierMap.info)){
 
       //cout << "rechtsunten" << endl;
+      collectedfrontiers.calc_orientation_pixel(rightdown,  FrontierMap.data, FrontierMap.info );
       collectedfrontiers=FloodfillFrontiers(rightdown, substitution, FrontierMap.data, FrontierMap.info, collectedfrontiers);
     }
   }
@@ -543,7 +634,8 @@ int main( int argc, char ** argv)
     while(ros::ok()){
       ros::spinOnce(); 
     }
-  // vis_pub = nh.advertise<visualization_msgs::Marker>( "visualization_marker", 1); 
+
+  //  vis_pub = nh.advertise<visualization_msgs::Marker>( "visualization_marker", 1); 
   // while(ros::ok()){
   //   visualization_msgs::Marker marker;
   //   marker.header.frame_id = "map";
@@ -572,9 +664,9 @@ int main( int argc, char ** argv)
   //     marker.points.push_back(p);  
   //   }
 
-    // ros::spinOnce(); 
-    // vis_pub.publish( marker );
-    // }
+  //   ros::spinOnce(); 
+  //   vis_pub.publish( marker );
+  //   }
 
   //ros::spin();
 
@@ -642,6 +734,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
         addingfrontier.euclidean_distance ( transform.getOrigin().x(), transform.getOrigin().y(), addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
+        addingfrontier.calc_orientation_frontier();
         every_frontier.push_back(addingfrontier);
         addingfrontier.delete_pixels();
         replacement = replacement + 10;
@@ -663,6 +756,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
         addingfrontier.euclidean_distance ( transform.getOrigin().x(), transform.getOrigin().y(), addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
+        addingfrontier.calc_orientation_frontier();
         every_frontier.push_back(addingfrontier);
         addingfrontier.delete_pixels();
         replacement = replacement + 10;
@@ -683,6 +777,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
         addingfrontier.euclidean_distance ( transform.getOrigin().x(), transform.getOrigin().y(), addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
+        addingfrontier.calc_orientation_frontier();
         every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_pixels();
@@ -703,6 +798,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
         addingfrontier.euclidean_distance ( transform.getOrigin().x(), transform.getOrigin().y(), addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
+        addingfrontier.calc_orientation_frontier();
         every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_pixels();
@@ -724,6 +820,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
         addingfrontier.euclidean_distance ( transform.getOrigin().x(), transform.getOrigin().y(), addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
+        addingfrontier.calc_orientation_frontier();
         every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_pixels();
@@ -744,6 +841,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
         addingfrontier.euclidean_distance ( transform.getOrigin().x(), transform.getOrigin().y(), addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
+        addingfrontier.calc_orientation_frontier();
         every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_pixels();
@@ -764,6 +862,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
         addingfrontier.euclidean_distance ( transform.getOrigin().x(), transform.getOrigin().y(), addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
+        addingfrontier.calc_orientation_frontier();
         every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_pixels();
@@ -784,6 +883,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
         addingfrontier.euclidean_distance ( transform.getOrigin().x(), transform.getOrigin().y(), addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
+        addingfrontier.calc_orientation_frontier();
         every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_pixels();
@@ -804,6 +904,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
       addingfrontier.pixels_x_y_transformation(FrontierMap.info);
       addingfrontier.calc_gravity_of_center();
       addingfrontier.euclidean_distance ( transform.getOrigin().x(), transform.getOrigin().y(), addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
+      addingfrontier.calc_orientation_frontier();
       every_frontier.push_back(addingfrontier);
       addingfrontier.delete_pixels();
       replacement = replacement + 10;
@@ -829,7 +930,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
     // Initialization for the ROS-Publisher to publish the new map data
     map_pub.publish(FrontierMap);
     ROS_INFO_STREAM("Publishing the NewMap.\n" );
-    sendingcoor(BiggestFrontier( every_frontier), every_frontier);
+    sendingcoor(ShortestDistanceFrontier( every_frontier), every_frontier);
     every_frontier.clear();
 }
 
@@ -850,8 +951,8 @@ void sendingcoor(int current ,std::vector <Frontiers> every_frontier){
   goal.target_pose.header.stamp = ros::Time::now();
   goal.target_pose.pose.position.x = every_frontier[current].get_gravity_of_center_x(); 
   goal.target_pose.pose.position.y = every_frontier[current].get_gravity_of_center_y();
-  goal.target_pose.pose.orientation.w = 1.0;
-  goal.target_pose.pose.orientation.z = 1.0;
+  goal.target_pose.pose.orientation.w = every_frontier[current].get_orientation_frontier_x();
+  goal.target_pose.pose.orientation.z = every_frontier[current].get_orientation_frontier_y();
   ROS_INFO("Sending goal");
   ac.sendGoal(goal);
   ac.waitForResult();
