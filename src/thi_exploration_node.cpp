@@ -63,6 +63,7 @@ class Frontiers {
       pixels.clear();
       xpos.clear();
       ypos.clear();
+      orientation_pixels.clear();
       number_of_pixel = 0;
       gravity_of_center_x = 0;
       gravity_of_center_y = 0;
@@ -150,12 +151,12 @@ class Frontiers {
    void calc_gravity_of_center (){
     float x = 0;
     float y = 0;
-    for (int j = 0; j < pixels.size(); j++){
+    for (int j = 0; j < xpos.size(); j++){
       x = x + xpos[j];
       y = y + ypos[j];
     }
     gravity_of_center_x = x/xpos.size();
-    gravity_of_center_y = y/xpos.size();
+    gravity_of_center_y = y/ypos.size();
   }
 
   void euclidean_distance (float current_x, float current_y, float future_x , float future_y){
@@ -166,8 +167,6 @@ class Frontiers {
   void calc_orientation_pixel(int latest, std::vector<signed char> data_orientation, nav_msgs::MapMetaData info_orientation )
   {
     tf::Vector3 latest_orientation (0,0,0);
-    int free_pixel = 0;
-    int occupied_pixel = 100;
     int unexplored_pixel = -1;
     
     //Right
@@ -191,22 +190,22 @@ class Frontiers {
     }
 
     //LeftUp
-    if( (latest >= info_orientation.width -1) && (data_orientation[latest-info_orientation.width-1]== unexplored_pixel) ){
+    if( (latest >= info_orientation.width -1) && (latest % info_orientation.width != 0) && (data_orientation[latest-info_orientation.width-1]== unexplored_pixel) ){
       latest_orientation = latest_orientation + tf::Vector3 (-1,-1,0);
     }
 
     //RightUp
-    if( (latest >= info_orientation.width -1) && (data_orientation[latest-info_orientation.width+1]== unexplored_pixel) ){
+    if( (latest >= info_orientation.width -1) && (latest % info_orientation.width != info_orientation.width -1) && (data_orientation[latest-info_orientation.width+1]== unexplored_pixel) ){
       latest_orientation = latest_orientation + tf::Vector3 (1,-1,0);
     }
 
     //LeftDown
-    if( (latest <= info_orientation.width * info_orientation.height-1) && (data_orientation[latest+info_orientation.width-1]== unexplored_pixel) ){
+    if( (latest <= info_orientation.width * info_orientation.height-1) && (latest % info_orientation.width != 0) && (data_orientation[latest+info_orientation.width-1]== unexplored_pixel) ){
       latest_orientation = latest_orientation + tf::Vector3 (-1,1,0);
     }
 
     //RightDown
-    if( (latest <= info_orientation.width * info_orientation.height-1) && (data_orientation[latest+info_orientation.width+1]== unexplored_pixel) ){
+    if( (latest <= info_orientation.width * info_orientation.height-1) && (latest % info_orientation.width != info_orientation.width -1)&& (data_orientation[latest+info_orientation.width+1]== unexplored_pixel) ){
       latest_orientation = latest_orientation + tf::Vector3 (1,1,0);
     }
     
@@ -228,6 +227,108 @@ class Frontiers {
     orientation_frontier_y = sum_y;
   }
 
+};
+
+class Pixel {
+   
+  private:
+
+  int identifier;
+
+  public:
+    Pixel(){
+      identifier = 0;
+    }
+
+    void check_pixeltype(int currentpos, std::vector<signed char> data_current, nav_msgs::MapMetaData info_current){
+      int free_pixel = 0;
+      int occupied_pixel = 100;
+      int unexplored_pixel = -1;
+
+      if(currentpos == 0){
+
+        if( (data_current[currentpos] ==free_pixel) && ( (data_current[currentpos+1] == unexplored_pixel) || (data_current[currentpos+info_current.width] == unexplored_pixel) ) ){
+
+          identifier = 1;
+        }
+      }
+
+      else if(currentpos == info_current.width-1){
+
+        if( (data_current[currentpos] == free_pixel) && ((data_current[currentpos-1] == unexplored_pixel) || (data_current[currentpos+info_current.width] ==unexplored_pixel) ) ){
+
+          identifier = 2;
+        }
+      }
+
+      else if(currentpos == info_current.width * (info_current.height-1)){
+    
+        if( (data_current[currentpos] == free_pixel) && ( (data_current[currentpos-info_current.width] == unexplored_pixel) || (data_current[currentpos+1] == unexplored_pixel))){
+
+          identifier = 3;
+        }
+      }
+
+      else if(currentpos == info_current.width * info_current.height-1 ){
+
+        if( (data_current[currentpos] == free_pixel) && ((data_current[currentpos-1] == unexplored_pixel) || (data_current[currentpos-info_current.width] == unexplored_pixel) ) ){
+
+          identifier = 4;
+        }
+      }
+
+      else if( (currentpos<info_current.width-1)&&(currentpos!=0) ){
+
+        if( (data_current[currentpos] == free_pixel) && ((data_current[currentpos-1] ==unexplored_pixel) || (data_current[currentpos+1] ==unexplored_pixel) || (data_current[currentpos+info_current.width] ==unexplored_pixel) ) ){
+
+          identifier = 5;
+        }
+      }
+
+      else if( (currentpos >info_current.width *(info_current.height-1)) && (currentpos< info_current.width * info_current.height-1) ){
+
+        if( (data_current[currentpos] ==free_pixel) && ((data_current[currentpos-1] ==unexplored_pixel) || (data_current[currentpos-info_current.width] ==unexplored_pixel) || (data_current[currentpos+1] ==unexplored_pixel) ) ){
+
+          identifier = 6;
+        }
+      }
+
+      else if( (currentpos % info_current.width == 0) && (currentpos!=0) && (currentpos != info_current.width * (info_current.height-1) ) ){
+
+        if  ( (data_current[currentpos] ==free_pixel) &&( (data_current[currentpos-info_current.width] ==unexplored_pixel) || (data_current[currentpos+1] == unexplored_pixel) || (data_current[currentpos+info_current.width] == unexplored_pixel))){
+
+          identifier = 7;
+        }
+
+      }
+
+      else if( (currentpos % info_current.width == info_current.width -1) && (currentpos!=info_current.width-1) && (currentpos != info_current.width * info_current.height -1)){
+
+        if( (data_current[currentpos] ==free_pixel) && ((data_current[currentpos-info_current.width] ==unexplored_pixel) || (data_current[currentpos-1] ==unexplored_pixel) ||  (data_current[currentpos+1] ==unexplored_pixel) )){
+
+          identifier = 8;
+        }
+      }
+
+      else
+      {
+        if( (data_current[currentpos]==free_pixel)  && ( (data_current[currentpos-1] == unexplored_pixel) || 
+        (data_current[currentpos+1] == unexplored_pixel) || (data_current[currentpos - info_current.width]==unexplored_pixel)|| 
+        (data_current[currentpos + info_current.width]==unexplored_pixel)  ) )
+        {
+
+          identifier = 9;
+        }
+      }
+    }
+
+    void delete_pixel(){
+      identifier = 0;
+    }
+    
+    int get_identifier(){
+      return identifier;
+    }
 };
 
 // global variables
@@ -261,162 +362,6 @@ bool PixelIsFrontier (int currentpos, std::vector<signed char> data_current, nav
   }
 
 }
-
-
-bool IsPixelUpLeftCorner (int corner_up_left, std::vector<signed char> data_up_left, nav_msgs::MapMetaData info_up_left){
-
-  int free_pixel = 0;
-  int occupied_pixel = 100;
-  int unexplored_pixel = -1;
-
-  if(corner_up_left == 0){
-
-    if( (data_up_left[corner_up_left] ==free_pixel) && ( (data_up_left[corner_up_left+1] == unexplored_pixel) || (data_up_left[corner_up_left+info_up_left.width] == unexplored_pixel) ) ){
-
-      return true;
-    }
-  }
-
-  return false;
-
-} 
-
-
-bool IsPixelUpRightCorner (int corner_up_right, std::vector<signed char> data_up_right, nav_msgs::MapMetaData info_up_right){
-
-  int free_pixel = 0;
-  int occupied_pixel = 100;
-  int unexplored_pixel = -1;
-
-  if(corner_up_right == info_up_right.width-1){
-
-    if( (data_up_right[corner_up_right] == free_pixel) && ((data_up_right[corner_up_right-1] == unexplored_pixel) || (data_up_right[corner_up_right+info_up_right.width] ==unexplored_pixel) ) ){
-
-      return true;
-    }
-  }
-
-  return false;
-
-}
-
-
-bool IsPixelDownLeftCorner (int corner_down_left, std::vector<signed char> data_down_left, nav_msgs::MapMetaData info_down_left){
-
-  int free_pixel = 0;
-  int occupied_pixel = 100;
-  int unexplored_pixel = -1;
-
-  if(corner_down_left == info_down_left.width * (info_down_left.height-1)){
-  
-    if( (data_down_left[corner_down_left] == free_pixel) && ( (data_down_left [corner_down_left-info_down_left.width] == unexplored_pixel) || (data_down_left[corner_down_left+1] == unexplored_pixel))){
-
-      return true;
-    }
-  }
-
-  return false;
-
-}
-
-
-bool IsPixelDownRightCorner (int corner_down_right, std::vector<signed char> data_down_right, nav_msgs::MapMetaData info_down_right){
-
-  int free_pixel = 0;
-  int occupied_pixel = 100;
-  int unexplored_pixel = -1;
-
-  if(corner_down_right == info_down_right.width * info_down_right.height-1 ){
-
-    if( (data_down_right[corner_down_right] == free_pixel) && ((data_down_right[corner_down_right-1] == unexplored_pixel) || (data_down_right[corner_down_right-info_down_right.width] == unexplored_pixel) ) ){
-
-      return true;
-    }
-  }
-
-  return false;
-
-}
-
-
-bool IsPixelFirstLine (int first_line, std::vector<signed char> data_first_line, nav_msgs::MapMetaData info_first_line){
-
-  int free_pixel = 0;
-  int occupied_pixel = 100;
-  int unexplored_pixel = -1;
-
-  if( (first_line<info_first_line.width-1)&&(first_line!=0) ){
-
-    if( (data_first_line[first_line] == free_pixel) && ((data_first_line[first_line-1] ==unexplored_pixel) || (data_first_line[first_line+1] ==unexplored_pixel) || (data_first_line[first_line+info_first_line.width] ==unexplored_pixel) ) ){
-
-      return true;
-    }
-  }
-
-  return false;
-
-}
-
-
-bool IsPixelLastLine (int last_line, std::vector<signed char> data_last_line, nav_msgs::MapMetaData info_last_line){
-
-  int free_pixel = 0;
-  int occupied_pixel = 100;
-  int unexplored_pixel = -1;
-
-
-  if( (last_line >info_last_line.width *(info_last_line.height-1)) && (last_line< info_last_line.width * info_last_line.height-1) ){
-
-    if( (data_last_line[last_line] ==free_pixel) && ((data_last_line[last_line-1] ==unexplored_pixel) || (data_last_line[last_line-info_last_line.width] ==unexplored_pixel) || (data_last_line[last_line+1] ==unexplored_pixel) ) ){
-
-      return true;
-    }
-  }
-
-  return false;
-
-}
-
-
-bool IsPixelFirstColumn (int first_column, std::vector<signed char> data_first_column, nav_msgs::MapMetaData info_first_column){
-
-  int free_pixel = 0;
-  int occupied_pixel = 100;
-  int unexplored_pixel = -1;
-
-  if( (first_column % info_first_column.width == 0) && (first_column!=0) && (first_column != info_first_column.width * (info_first_column.height-1) ) ){
-
-    if  ( (data_first_column[first_column] ==free_pixel) &&( (data_first_column[first_column-info_first_column.width] ==unexplored_pixel) || (data_first_column[first_column+1] == unexplored_pixel) || (data_first_column[first_column+info_first_column.width] == unexplored_pixel))){
-
-      return true;
-    }
-
-  }
-
-  return false;
-
-}
-
-
-bool IsPixelLastColumn (int last_column, std::vector<signed char> data_last_column, nav_msgs::MapMetaData info_last_column){
-
-  int free_pixel = 0;
-  int occupied_pixel = 100;
-  int unexplored_pixel = -1;
-
-  if( (last_column % info_last_column.width == info_last_column.width -1) && (last_column!=info_last_column.width-1) && (last_column != info_last_column.width * info_last_column.height -1)){
-
-    if( (data_last_column[last_column] ==free_pixel) && ((data_last_column[last_column-info_last_column.width] ==unexplored_pixel) || (data_last_column[last_column-1] ==unexplored_pixel) ||  (data_last_column[last_column+1] ==unexplored_pixel) )){
-
-      return true;
-    }
-  }
-
-  return false;
-
-}
-
-
 
 bool ExistedFrontier (int position, std::vector <Frontiers> every_frontier){
      
@@ -466,7 +411,6 @@ int ShortestDistanceFrontier (std::vector <Frontiers> every_frontier){
 Frontiers FloodfillFrontiers(int counter, int substitution, std::vector<signed char> data_map, nav_msgs::MapMetaData info_map,  Frontiers transfer ){
   
   int free_pixel = 0;
-  int occupied_pixel = 100;
   int unexplored_pixel = -1;
 
   int right = counter + 1;
@@ -604,25 +548,22 @@ if (  PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info)){
 
 int main( int argc, char ** argv)
 { 
-  
   // Initialization of ros node
   ros::init(argc, argv , "thi_exploration");
 
   // Initialization of node handle for communication with ROSCORE
   ros::NodeHandle nh;
 
-  
+  // Initialization for the ROS-Subscriber to subscribe the map data
+  ros::Subscriber map_sub = nh.subscribe("gmapping/map", 1, mapCallback);
+  //ros::Subscriber map_sub = nh.subscribe("map", 1, mapCallback);
 
-    // Initialization for the ROS-Subscriber to subscribe the map data
-    ros::Subscriber map_sub = nh.subscribe("gmapping/map", 1, mapCallback);
-    //ros::Subscriber map_sub = nh.subscribe("map", 1, mapCallback);
+  // Initialization for the ROS-Publisher to publish the new map data
+  map_pub = nh.advertise<nav_msgs::OccupancyGrid>("frontier_exploration",1);
 
-    // Initialization for the ROS-Publisher to publish the new map data
-    map_pub = nh.advertise<nav_msgs::OccupancyGrid>("frontier_exploration",1);
-
-    while(ros::ok()){
-      ros::spinOnce(); 
-    }
+  while(ros::ok()){
+    ros::spinOnce(); 
+  }
 
   //  vis_pub = nh.advertise<visualization_msgs::Marker>( "visualization_marker", 1); 
   // while(ros::ok()){
@@ -687,15 +628,12 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
   std::vector<signed char> data_old = msg->data;
   std::vector <Frontiers> every_frontier;
   
-  
   FrontierMap.header = header_old;
   FrontierMap.info = info_old;
   FrontierMap.data = data_old; 
 
-  bool pixel_checked = true;
-
   Frontiers addingfrontier;
-
+  Pixel cell;
   int replacement = 10;
   
   
@@ -711,14 +649,15 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     // ROS_ERROR_STREAM("current color: " << replacement); 
 
+
+    cell.check_pixeltype(i, data_old, info_old);
     //Pixel at the up-left corner
 
-    if( IsPixelUpLeftCorner(i, FrontierMap.data, FrontierMap.info) == true){
+    if( cell.get_identifier() == 1){
       //ROS_INFO("The neighbours of the up-left corner are  %d, %d \n", i+1 , i+info_old.width);
       //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
-      pixel_checked = ExistedFrontier(i, every_frontier); 
 
-      if (pixel_checked==false) {
+      if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
@@ -735,12 +674,11 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     //Pixel at the up-right corner
 
-    if(IsPixelUpRightCorner(i, FrontierMap.data, FrontierMap.info) == true){
+    if( cell.get_identifier() == 2){
       //ROS_INFO("The neighbours of the up-right corner are  %d, %d \n", i-1,  i+info_old.width);
       //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
-      pixel_checked = ExistedFrontier(i, every_frontier);
 
-      if (pixel_checked==false) {
+      if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
@@ -756,12 +694,11 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
        
     //Pixels in the first line--> not included the up left/ up-right corner
 
-    if( IsPixelFirstLine (i, FrontierMap.data, FrontierMap.info) == true){
+    if( cell.get_identifier() == 3){
       // ROS_INFO("The neighbours in the first line (without up left/right corner) are  %d, %d, %d \n", i-1, i+1 , i+info_old.width);
       // ROS_INFO_STREAM("pixel" << i <<" is a boundary");
-      pixel_checked = ExistedFrontier(i,every_frontier);
 
-      if (pixel_checked==false) {
+      if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
@@ -777,12 +714,11 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     // Pixels in the first column --> not included up-left / down left corner
 
-    if( IsPixelFirstColumn (i, FrontierMap.data, FrontierMap.info) == true){
+    if( cell.get_identifier() == 4){
       //ROS_INFO("The neighbours  in the first column (wihtout up/down left corner) are  %d, %d, %d \n", i-info_old.width, i+1, i+info_old.width  );  
       //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
-      pixel_checked = ExistedFrontier(i,every_frontier);
 
-      if (pixel_checked==false) {
+      if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
@@ -799,12 +735,11 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
     
     // Pixel at the down-left corner
 
-    if(IsPixelDownRightCorner (i, FrontierMap.data, FrontierMap.info) == true){
+    if(cell.get_identifier() == 5){
       // ROS_INFO("The neighbours of the down-left corner are  %d, %d \n", i-info_old.width, i+1  );
       // ROS_INFO_STREAM("pixel" << i <<" is a boundary");
-      pixel_checked = ExistedFrontier(i,every_frontier);
 
-      if (pixel_checked==false) {
+      if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
@@ -820,12 +755,11 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     // Pixels in the last line--> not included the down-left / down right corner
 
-    if( IsPixelLastLine (i, FrontierMap.data, FrontierMap.info) == true ){
+    if( cell.get_identifier() == 6 ){
       // ROS_INFO("The neighbours in the last line (without down-left/right corner) are  %d, %d, %d \n", i-1,  i-info_old.width, i+1 );
       // ROS_INFO_STREAM("pixel" << i <<" is a boundary");
-      pixel_checked = ExistedFrontier(i,every_frontier);
 
-      if (pixel_checked==false) {
+      if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
@@ -841,12 +775,11 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     // Pixels in the last column --> not included the up-right / down right corner
 
-    if ( IsPixelLastColumn (i, FrontierMap.data, FrontierMap.info) == true  ){
+    if ( cell.get_identifier() == 7  ){
       // ROS_INFO("The neighbours in the last column (without up/down right corner) are  %d, %d, %d \n", i-info_old.width, i-1, i+info_old.width  );
       // ROS_INFO_STREAM("pixel" << i <<" is a boundary");
-      pixel_checked = ExistedFrontier(i,every_frontier);
 
-      if (pixel_checked==false) {
+      if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
@@ -862,12 +795,11 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     //Pixel at the down-right corner
 
-    if(IsPixelDownRightCorner (i, FrontierMap.data, FrontierMap.info) == true ){
+    if( cell.get_identifier() == 8 ){
       // ROS_INFO_STREAM("The neighbours are of the down-right corner " << i-1 << " " << i-info_old.width << "\n");
       // ROS_INFO_STREAM("pixel" << i <<" is a boundary");
-      pixel_checked = ExistedFrontier(i,every_frontier);
 
-      if (pixel_checked==false) {
+      if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
         addingfrontier.pixels_x_y_transformation(FrontierMap.info);
         addingfrontier.calc_gravity_of_center();
@@ -884,11 +816,10 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
     //Other Pixels
 
     // ROS_INFO_STREAM("The neighbours are "<< i-1 <<" " << i-info_old.width <<" "<< i+1 <<" "<< i+info_old.width<<" "<<  "\n"  );
-    if ( PixelIsFrontier ( i, FrontierMap.data,  FrontierMap.info)  ){
+    if ( cell.get_identifier() == 9 ){
       //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
-      pixel_checked = ExistedFrontier(i,every_frontier);
 
-    if (pixel_checked==false) {
+    if (ExistedFrontier(i, every_frontier)==false) {
       addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
       addingfrontier.pixels_x_y_transformation(FrontierMap.info);
       addingfrontier.calc_gravity_of_center();
@@ -899,7 +830,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
       replacement = replacement + 10;
       }
     }
-
+    cell.delete_pixel();
   }
  
   // for (int iter = 0; iter < every_frontier.size()  ; iter++){  
@@ -940,8 +871,8 @@ void sendingcoor(int current ,std::vector <Frontiers> every_frontier){
   goal.target_pose.header.stamp = ros::Time::now();
   goal.target_pose.pose.position.x = every_frontier[current].get_gravity_of_center_x(); 
   goal.target_pose.pose.position.y = every_frontier[current].get_gravity_of_center_y();
-  goal.target_pose.pose.orientation.w = every_frontier[current].get_orientation_frontier_x();
-  goal.target_pose.pose.orientation.z = every_frontier[current].get_orientation_frontier_y();
+  goal.target_pose.pose.orientation.w = every_frontier[current].get_orientation_frontier_y();
+  goal.target_pose.pose.orientation.z = every_frontier[current].get_orientation_frontier_x();
   ROS_INFO("Sending goal");
   ac.sendGoal(goal);
   ac.waitForResult();
