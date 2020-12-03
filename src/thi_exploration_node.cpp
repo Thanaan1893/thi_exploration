@@ -1,12 +1,18 @@
 // Including the input and output stream
 #include <iostream>
+
+// Including standard vector
 #include <vector>
+
 // Including the ROS libary
 #include <ros/ros.h>
+
+// Including the tf libary, transforamtiontree, 3-D-Point-Vector
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
 #include <tf/LinearMath/Vector3.h>
 
+// Including the visualization-tools in RVIZ
 #include <visualization_msgs/Marker.h>
 
 //Including Move-Base and action libary-->Navigtion Stack  
@@ -49,7 +55,6 @@ class Frontiers {
   public:
 
     Frontiers(){
-      //cout << "object created" <<endl;
       number_of_pixel = 0;
       gravity_of_center_x = 0;
       gravity_of_center_y = 0;
@@ -92,11 +97,11 @@ class Frontiers {
       for (int j = 0; j < pixels.size(); j++)
       { 
         if(pixels[j]==number){
-          //cout<< "Pixel is in Frontiers " << endl;
+          
           return true;
         }
       }
-      //cout<< "Pixel is not in Frontiers " << endl;
+      
       return false;
     }
 
@@ -142,8 +147,6 @@ class Frontiers {
       y =  pixels[j]  / info_x.width * info_x.resolution + info_x.origin.position.y;
       xpos.push_back(x);
       ypos.push_back(y);
-      // cout<< "Pixel in x coordinate: "<< xpos[j] <<endl;
-      // cout<< "Pixel in y_coordinate: "<< ypos[j] <<endl;
 
     }
   }
@@ -161,7 +164,7 @@ class Frontiers {
 
   void euclidean_distance (float current_x, float current_y, float future_x , float future_y){
     distance = sqrt( (current_x-future_x) * (current_x-future_x) + (current_y - future_y) * (current_y - future_y) );
-    //cout << "Distanz: " << distance << endl; 
+
   } 
 
   void calc_orientation_pixel(int latest, std::vector<signed char> data_orientation, nav_msgs::MapMetaData info_orientation )
@@ -329,6 +332,100 @@ class Pixel {
     int get_identifier(){
       return identifier;
     }
+};
+
+
+class MoveBase{
+
+  public:
+  MoveBase( float position_x, float position_y, float position_z, float orientation_w, float orientation_x, float orientation_y, float orientation_z ){
+ 
+
+    move_base_msgs::MoveBaseGoal goal;
+    //we'll send a goal to the robot to move 1 meter forward
+    goal.target_pose.header.frame_id = "map";
+    goal.target_pose.header.stamp = ros::Time::now();
+    goal.target_pose.pose.position.x = position_x; 
+    goal.target_pose.pose.position.y = position_y;
+    goal.target_pose.pose.position.z = position_z;
+
+    goal.target_pose.pose.orientation.w = orientation_w;
+    goal.target_pose.pose.orientation.x = orientation_x;
+    goal.target_pose.pose.orientation.y = orientation_y;
+    goal.target_pose.pose.orientation.z = orientation_z;
+
+    //tell the action client that we want to spin a thread by default
+    MoveBaseClient ac("move_base", true);
+   
+    //wait for the action server to come up
+    while(!ac.waitForServer(ros::Duration(5.0))){
+      ROS_INFO("Waiting for the move_base action server to come up");
+    }
+    ROS_INFO("Sending goal");
+    ac.sendGoal(goal);
+    ac.waitForResult();
+
+    if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+      ROS_INFO("Hooray, the base moved 1 meter forward");
+    else
+      ROS_INFO("The base failed to move forward 1 meter for some reason");
+
+  
+  }
+  
+  void set_position_x(move_base_msgs::MoveBaseGoal goal, float position_x)
+  {
+    goal.target_pose.pose.position.x = position_x;
+  }
+
+  void set_position_y(move_base_msgs::MoveBaseGoal goal, float position_y)
+  {
+    goal.target_pose.pose.position.y = position_y;
+  }
+  void set_position_z(move_base_msgs::MoveBaseGoal goal, float position_z)
+  {
+    goal.target_pose.pose.position.z = position_z;
+  }
+  void set_orientation_w(move_base_msgs::MoveBaseGoal goal, float orientation_w)
+  {
+    goal.target_pose.pose.orientation.w = orientation_w;
+  }
+
+  void set_orientation_x(move_base_msgs::MoveBaseGoal goal, float orientation_x)
+  {
+    goal.target_pose.pose.orientation.x = orientation_x;
+  }
+
+  void set_orientation_y(move_base_msgs::MoveBaseGoal goal, float orientation_y)
+  {
+    goal.target_pose.pose.orientation.y = orientation_y;
+  }
+
+  void set_orientation_z(move_base_msgs::MoveBaseGoal goal, float orientation_z)
+  {
+    goal.target_pose.pose.orientation.z = orientation_z;
+  }
+  
+  void send_coor(move_base_msgs::MoveBaseGoal goal){
+
+    //tell the action client that we want to spin a thread by default
+    MoveBaseClient ac("move_base", true);
+   
+    //wait for the action server to come up
+    while(!ac.waitForServer(ros::Duration(5.0))){
+      ROS_INFO("Waiting for the move_base action server to come up");
+    }
+    ROS_INFO("Sending goal");
+    ac.sendGoal(goal);
+    ac.waitForResult();
+
+    if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+      ROS_INFO("Hooray, the base moved 1 meter forward");
+    else
+      ROS_INFO("The base failed to move forward 1 meter for some reason");
+
+  }
+    
 };
 
 // global variables
@@ -530,10 +627,7 @@ if (  PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info)){
       collectedfrontiers=FloodfillFrontiers(rightdown, substitution, FrontierMap.data, FrontierMap.info, collectedfrontiers);
     }
   }
-
-
   //cout << anze <<". Rekursion beendet" << endl;
- 
   return collectedfrontiers; 
  }
 
@@ -610,18 +704,16 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
   tf::TransformListener listener;
 
   ros::Rate rate(10.0);
-  //while (nh.ok()){
-    tf::StampedTransform transform;
-      try{
-        listener.waitForTransform("/map", "/robot0", ros::Time(), ros::Duration(4.0));
-        listener.lookupTransform( "/map" , "/robot0",ros::Time(0), transform);
+  tf::StampedTransform transform;
+    try{
+      listener.waitForTransform("/map", "/robot0", ros::Time(), ros::Duration(4.0));
+      listener.lookupTransform( "/map" , "/robot0",ros::Time(0), transform);
       }
-      catch (tf::TransformException &ex) {
-        ROS_ERROR("%s",ex.what());
-        ros::Duration(1.0).sleep();
-        //continue;
+    catch (tf::TransformException &ex) {
+      ROS_ERROR("%s",ex.what());
+      ros::Duration(1.0).sleep();
     }
-  //}
+
   //Saving the parts of the OccupancyGrid in variables --> see documentation: doc.ros.org
   std_msgs::Header header_old = msg->header;
   nav_msgs::MapMetaData info_old = msg->info;
@@ -635,6 +727,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
   Frontiers addingfrontier;
   Pixel cell;
   int replacement = 10;
+  int position = 0;
   
   
   //Show the height, width and size of the map
@@ -647,15 +740,11 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
   // 4. überlegen wie grenzen gefunden werden können (zellebene)
   for (int i =0; i < info_old.width *info_old.height; i++) {
 
-    // ROS_ERROR_STREAM("current color: " << replacement); 
-
-
     cell.check_pixeltype(i, data_old, info_old);
+
     //Pixel at the up-left corner
 
     if( cell.get_identifier() == 1){
-      //ROS_INFO("The neighbours of the up-left corner are  %d, %d \n", i+1 , i+info_old.width);
-      //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
 
       if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
@@ -667,7 +756,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
         addingfrontier.delete_frontier();
         replacement = replacement + 10;
       }
-      
+
       continue;
     }
     
@@ -675,8 +764,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
     //Pixel at the up-right corner
 
     if( cell.get_identifier() == 2){
-      //ROS_INFO("The neighbours of the up-right corner are  %d, %d \n", i-1,  i+info_old.width);
-      //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
 
       if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
@@ -695,8 +782,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
     //Pixels in the first line--> not included the up left/ up-right corner
 
     if( cell.get_identifier() == 3){
-      // ROS_INFO("The neighbours in the first line (without up left/right corner) are  %d, %d, %d \n", i-1, i+1 , i+info_old.width);
-      // ROS_INFO_STREAM("pixel" << i <<" is a boundary");
 
       if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
@@ -715,8 +800,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
     // Pixels in the first column --> not included up-left / down left corner
 
     if( cell.get_identifier() == 4){
-      //ROS_INFO("The neighbours  in the first column (wihtout up/down left corner) are  %d, %d, %d \n", i-info_old.width, i+1, i+info_old.width  );  
-      //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
 
       if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
@@ -736,8 +819,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
     // Pixel at the down-left corner
 
     if(cell.get_identifier() == 5){
-      // ROS_INFO("The neighbours of the down-left corner are  %d, %d \n", i-info_old.width, i+1  );
-      // ROS_INFO_STREAM("pixel" << i <<" is a boundary");
 
       if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
@@ -756,8 +837,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
     // Pixels in the last line--> not included the down-left / down right corner
 
     if( cell.get_identifier() == 6 ){
-      // ROS_INFO("The neighbours in the last line (without down-left/right corner) are  %d, %d, %d \n", i-1,  i-info_old.width, i+1 );
-      // ROS_INFO_STREAM("pixel" << i <<" is a boundary");
 
       if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
@@ -776,8 +855,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
     // Pixels in the last column --> not included the up-right / down right corner
 
     if ( cell.get_identifier() == 7  ){
-      // ROS_INFO("The neighbours in the last column (without up/down right corner) are  %d, %d, %d \n", i-info_old.width, i-1, i+info_old.width  );
-      // ROS_INFO_STREAM("pixel" << i <<" is a boundary");
 
       if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
@@ -796,8 +873,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
     //Pixel at the down-right corner
 
     if( cell.get_identifier() == 8 ){
-      // ROS_INFO_STREAM("The neighbours are of the down-right corner " << i-1 << " " << i-info_old.width << "\n");
-      // ROS_INFO_STREAM("pixel" << i <<" is a boundary");
 
       if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
@@ -815,73 +890,33 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     //Other Pixels
 
-    // ROS_INFO_STREAM("The neighbours are "<< i-1 <<" " << i-info_old.width <<" "<< i+1 <<" "<< i+info_old.width<<" "<<  "\n"  );
     if ( cell.get_identifier() == 9 ){
-      //ROS_INFO_STREAM("pixel" << i <<" is a boundary");
 
-    if (ExistedFrontier(i, every_frontier)==false) {
-      addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
-      addingfrontier.pixels_x_y_transformation(FrontierMap.info);
-      addingfrontier.calc_gravity_of_center();
-      addingfrontier.euclidean_distance ( transform.getOrigin().x(), transform.getOrigin().y(), addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
-      addingfrontier.calc_orientation_frontier();
-      every_frontier.push_back(addingfrontier);
-      addingfrontier.delete_frontier();
-      replacement = replacement + 10;
+      if (ExistedFrontier(i, every_frontier)==false) {
+        addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
+        addingfrontier.pixels_x_y_transformation(FrontierMap.info);
+        addingfrontier.calc_gravity_of_center();
+        addingfrontier.euclidean_distance ( transform.getOrigin().x(), transform.getOrigin().y(), addingfrontier.get_gravity_of_center_x() , addingfrontier.get_gravity_of_center_x());
+        addingfrontier.calc_orientation_frontier();
+        every_frontier.push_back(addingfrontier);
+        addingfrontier.delete_frontier();
+        replacement = replacement + 10;
       }
     }
     cell.delete_pixel();
   }
  
-  // for (int iter = 0; iter < every_frontier.size()  ; iter++){  
-  //   every_frontier[iter].print_frontier();
-  //   cout << "Ende des Frontiers" <<endl;  
-  // }
-
   cout << every_frontier.size() << endl;
-
   std::cout << FrontierMap.data.size() << std::endl; 
   
-  // for(size_t i=0 ; i< FrontierMap.info.width ; i++)
-  // {
-  //   FrontierMap.data[i] = 200; 
-  // }
-
-    // Initialization for the ROS-Publisher to publish the new map data
-    map_pub.publish(FrontierMap);
-    ROS_INFO_STREAM("Publishing the NewMap.\n" );
-    sendingcoor(ShortestDistanceFrontier( every_frontier), every_frontier);
-    every_frontier.clear();
+  // Initialization for the ROS-Publisher to publish the new map data
+  map_pub.publish(FrontierMap);
+  ROS_INFO_STREAM("Publishing the NewMap.\n" );
+  position = BiggestFrontier( every_frontier);
+  //position = ShortestDistanceFrontier( every_frontier);
+  MoveBase next_target( every_frontier[position].get_gravity_of_center_x(), every_frontier[position].get_gravity_of_center_y(), 0, every_frontier[position].get_orientation_frontier_y(), 0, 0, every_frontier[position].get_orientation_frontier_x());
+  every_frontier.clear();
 }
 
-
-
-void sendingcoor(int current ,std::vector <Frontiers> every_frontier){
-
- //tell the action client that we want to spin a thread by default
-  MoveBaseClient ac("move_base", true);
-   
-  //wait for the action server to come up
-  while(!ac.waitForServer(ros::Duration(5.0))){
-    ROS_INFO("Waiting for the move_base action server to come up");
-  }
-  move_base_msgs::MoveBaseGoal goal;
-  //we'll send a goal to the robot to move 1 meter forward
-  goal.target_pose.header.frame_id = "map";
-  goal.target_pose.header.stamp = ros::Time::now();
-  goal.target_pose.pose.position.x = every_frontier[current].get_gravity_of_center_x(); 
-  goal.target_pose.pose.position.y = every_frontier[current].get_gravity_of_center_y();
-  goal.target_pose.pose.orientation.w = every_frontier[current].get_orientation_frontier_y();
-  goal.target_pose.pose.orientation.z = every_frontier[current].get_orientation_frontier_x();
-  ROS_INFO("Sending goal");
-  ac.sendGoal(goal);
-  ac.waitForResult();
-
-  if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
-    ROS_INFO("Hooray, the base moved 1 meter forward");
-  else
-     ROS_INFO("The base failed to move forward 1 meter for some reason");
-
-}
 
 
