@@ -245,9 +245,9 @@ class Pixel {
 
     void check_pixeltype(int currentpos, std::vector<signed char> data_current, nav_msgs::MapMetaData info_current){
       int free_pixel = 0;
-      int occupied_pixel = 100;
       int unexplored_pixel = -1;
 
+      // Up - left Corner
       if(currentpos == 0){
 
         if( (data_current[currentpos] ==free_pixel) && ( (data_current[currentpos+1] == unexplored_pixel) || (data_current[currentpos+info_current.width] == unexplored_pixel) ) ){
@@ -256,73 +256,82 @@ class Pixel {
         }
       }
 
-      else if(currentpos == info_current.width-1){
+      //First line
+      else if( (currentpos<info_current.width-1)&&(currentpos!=0) ){
 
-        if( (data_current[currentpos] == free_pixel) && ((data_current[currentpos-1] == unexplored_pixel) || (data_current[currentpos+info_current.width] ==unexplored_pixel) ) ){
+        if( (data_current[currentpos] == free_pixel) && ((data_current[currentpos-1] ==unexplored_pixel) || (data_current[currentpos+1] ==unexplored_pixel) || (data_current[currentpos+info_current.width] ==unexplored_pixel) ) ){
 
           identifier = 2;
         }
       }
 
-      else if(currentpos == info_current.width * (info_current.height-1)){
-    
-        if( (data_current[currentpos] == free_pixel) && ( (data_current[currentpos-info_current.width] == unexplored_pixel) || (data_current[currentpos+1] == unexplored_pixel))){
+      // Up - right Corner
+      else if(currentpos == info_current.width-1){
+
+        if( (data_current[currentpos] == free_pixel) && ((data_current[currentpos-1] == unexplored_pixel) || (data_current[currentpos+info_current.width] ==unexplored_pixel) ) ){
 
           identifier = 3;
         }
       }
+      
+      // First Column
+      else if( (currentpos % info_current.width == 0) && (currentpos!=0) && (currentpos != info_current.width * (info_current.height-1) ) ){
 
-      else if(currentpos == info_current.width * info_current.height-1 ){
-
-        if( (data_current[currentpos] == free_pixel) && ((data_current[currentpos-1] == unexplored_pixel) || (data_current[currentpos-info_current.width] == unexplored_pixel) ) ){
+        if  ( (data_current[currentpos] ==free_pixel) &&( (data_current[currentpos-info_current.width] ==unexplored_pixel) || (data_current[currentpos+1] == unexplored_pixel) || (data_current[currentpos+info_current.width] == unexplored_pixel))){
 
           identifier = 4;
         }
+
       }
 
-      else if( (currentpos<info_current.width-1)&&(currentpos!=0) ){
+      // Last Column
+      else if( (currentpos % info_current.width == info_current.width -1) && (currentpos!=info_current.width-1) && (currentpos != info_current.width * info_current.height -1)){
 
-        if( (data_current[currentpos] == free_pixel) && ((data_current[currentpos-1] ==unexplored_pixel) || (data_current[currentpos+1] ==unexplored_pixel) || (data_current[currentpos+info_current.width] ==unexplored_pixel) ) ){
-
-          identifier = 5;
-        }
-      }
-
-      else if( (currentpos >info_current.width *(info_current.height-1)) && (currentpos< info_current.width * info_current.height-1) ){
-
-        if( (data_current[currentpos] ==free_pixel) && ((data_current[currentpos-1] ==unexplored_pixel) || (data_current[currentpos-info_current.width] ==unexplored_pixel) || (data_current[currentpos+1] ==unexplored_pixel) ) ){
+        if( (data_current[currentpos] ==free_pixel) && ((data_current[currentpos-info_current.width] ==unexplored_pixel) || (data_current[currentpos-1] ==unexplored_pixel) ||  (data_current[currentpos+1] ==unexplored_pixel) )){
 
           identifier = 6;
         }
       }
 
-      else if( (currentpos % info_current.width == 0) && (currentpos!=0) && (currentpos != info_current.width * (info_current.height-1) ) ){
-
-        if  ( (data_current[currentpos] ==free_pixel) &&( (data_current[currentpos-info_current.width] ==unexplored_pixel) || (data_current[currentpos+1] == unexplored_pixel) || (data_current[currentpos+info_current.width] == unexplored_pixel))){
+      // Down - left Corner
+      else if(currentpos == info_current.width * (info_current.height-1)){
+    
+        if( (data_current[currentpos] == free_pixel) && ( (data_current[currentpos-info_current.width] == unexplored_pixel) || (data_current[currentpos+1] == unexplored_pixel))){
 
           identifier = 7;
         }
-
       }
 
-      else if( (currentpos % info_current.width == info_current.width -1) && (currentpos!=info_current.width-1) && (currentpos != info_current.width * info_current.height -1)){
+      // Last Line
+      else if( (currentpos >info_current.width *(info_current.height-1)) && (currentpos< info_current.width * info_current.height-1) ){
 
-        if( (data_current[currentpos] ==free_pixel) && ((data_current[currentpos-info_current.width] ==unexplored_pixel) || (data_current[currentpos-1] ==unexplored_pixel) ||  (data_current[currentpos+1] ==unexplored_pixel) )){
+        if( (data_current[currentpos] ==free_pixel) && ((data_current[currentpos-1] ==unexplored_pixel) || (data_current[currentpos-info_current.width] ==unexplored_pixel) || (data_current[currentpos+1] ==unexplored_pixel) ) ){
 
           identifier = 8;
         }
       }
 
-      else
+      // Down - right Corner
+      else if (currentpos == info_current.width * info_current.height-1 ){
+
+        if( (data_current[currentpos] == free_pixel) && ((data_current[currentpos-1] == unexplored_pixel) || (data_current[currentpos-info_current.width] == unexplored_pixel) ) ){
+
+          identifier = 9;
+        }
+      }
+      
+       // Center
+      else 
       {
         if( (data_current[currentpos]==free_pixel)  && ( (data_current[currentpos-1] == unexplored_pixel) || 
         (data_current[currentpos+1] == unexplored_pixel) || (data_current[currentpos - info_current.width]==unexplored_pixel)|| 
         (data_current[currentpos + info_current.width]==unexplored_pixel)  ) )
         {
 
-          identifier = 9;
+          identifier = 5;
         }
       }
+
     }
 
     void delete_pixel(){
@@ -337,11 +346,15 @@ class Pixel {
 
 class MoveBase{
 
+  private:
+    move_base_msgs::MoveBaseGoal goal;
+
+
   public:
   MoveBase( float position_x, float position_y, float position_z, float orientation_w, float orientation_x, float orientation_y, float orientation_z ){
  
 
-    move_base_msgs::MoveBaseGoal goal;
+    
     //we'll send a goal to the robot to move 1 meter forward
     goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.stamp = ros::Time::now();
@@ -439,27 +452,6 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg);
 void sendingcoor(int current, std::vector <Frontiers> every_frontier);
 
 
-bool PixelIsFrontier (int currentpos, std::vector<signed char> data_current, nav_msgs::MapMetaData info_current){
-
-  int free_pixel = 0;
-  int occupied_pixel = 100;
-  int unexplored_pixel = -1;
-
-  if( (data_current[currentpos]==free_pixel)  && ( (data_current[currentpos-1] == unexplored_pixel) || 
-      (data_current[currentpos+1] == unexplored_pixel) || (data_current[currentpos - info_current.width]==unexplored_pixel)|| 
-      (data_current[currentpos + info_current.width]==unexplored_pixel)  ) )
-  {
-
-    return true;
-  }
-
-  else
-  {
-    return false;
-  }
-
-}
-
 bool ExistedFrontier (int position, std::vector <Frontiers> every_frontier){
      
   for (int iter = 0; iter < every_frontier.size(); iter++){
@@ -518,14 +510,35 @@ Frontiers FloodfillFrontiers(int counter, int substitution, std::vector<signed c
   int rightup = counter  - info_map.width+1;
   int leftdown = counter + info_map.width-1;
   int rightdown = counter  + info_map.width+1;
-  Frontiers collectedfrontiers = transfer;
+
+  Pixel right_cell;
+  right_cell.check_pixeltype(right, FrontierMap.data, FrontierMap.info);
   
+  Pixel left_cell ;
+  left_cell.check_pixeltype(left, FrontierMap.data, FrontierMap.info);
+
+  Pixel up_cell ;
+  up_cell.check_pixeltype(up, FrontierMap.data, FrontierMap.info);
+
+  Pixel down_cell ;
+  down_cell.check_pixeltype(down, FrontierMap.data, FrontierMap.info);
+
+  Pixel leftup_cell ;
+  leftup_cell.check_pixeltype(leftup, FrontierMap.data, FrontierMap.info);
+
+  Pixel rightup_cell ;
+  rightup_cell.check_pixeltype(rightup, FrontierMap.data, FrontierMap.info);
+
+  Pixel leftdown_cell ;
+  leftdown_cell.check_pixeltype(leftdown, FrontierMap.data, FrontierMap.info);
+
+  Pixel rightdown_cell ;
+  rightdown_cell.check_pixeltype(rightdown, FrontierMap.data, FrontierMap.info);
+  
+  Frontiers collectedfrontiers = transfer;
   collectedfrontiers.set_pixels(counter);
 
-  //anze++;
-  //cout << anze <<". Rekursion" << endl;
-
-   if (FrontierMap.data[counter] == substitution) {
+  if (FrontierMap.data[counter] == substitution) {
     //cout << "Wenn die gewünschte Farbe im Pixel schon ersetzt wurde" << endl;
     return collectedfrontiers;
   }
@@ -537,13 +550,13 @@ Frontiers FloodfillFrontiers(int counter, int substitution, std::vector<signed c
   
   else { 
     //cout << "Ersetze im Pixel die gewünschte Farbe" << endl;
-    //std::cout << "Color: " << replacement << " at index: " << counter << std::endl; 
     FrontierMap.data[counter] = substitution;
    }
   
-  if  ( (right % info_map.width != info_map.width -1)  ) 
-  { 
-    if (  PixelIsFrontier ( right, FrontierMap.data,  FrontierMap.info)){
+  if  ( (right % info_map.width != info_map.width -1)  ) { 
+
+    if (  (right_cell.get_identifier() == 5) || (right_cell.get_identifier() == 1) || (right_cell.get_identifier() == 2) || 
+          (right_cell.get_identifier() == 4) || (right_cell.get_identifier() == 7) || (right_cell.get_identifier() == 8)   ){
 
       //cout << "rechts" << endl;
       collectedfrontiers.calc_orientation_pixel(right,  FrontierMap.data, FrontierMap.info );
@@ -552,9 +565,10 @@ Frontiers FloodfillFrontiers(int counter, int substitution, std::vector<signed c
   }
   
   
-  if  ( left % info_map.width != 0 ) 
-  { 
-if (  PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info)){
+  if  ( left % info_map.width != 0 ) { 
+
+    if (  (left_cell.get_identifier() == 5) || (left_cell.get_identifier() == 2) || (left_cell.get_identifier() == 3) || 
+          (left_cell.get_identifier() == 6) || (left_cell.get_identifier() == 8) || (left_cell.get_identifier() == 9)   ){
 
       //cout << "links" << endl;
       collectedfrontiers.calc_orientation_pixel(left,  FrontierMap.data, FrontierMap.info );
@@ -563,9 +577,10 @@ if (  PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info)){
   }
   
 
-  if  ( up >= info_map.width -1 )   
-  { 
-  if (  PixelIsFrontier ( up, FrontierMap.data,  FrontierMap.info)){
+  if  ( up >= info_map.width -1 )   {
+    
+    if (  (up_cell.get_identifier() == 5) || (up_cell.get_identifier() == 4) || (up_cell.get_identifier() == 6) || 
+          (up_cell.get_identifier() == 7) || (up_cell.get_identifier() == 8) || (up_cell.get_identifier() == 9)   ){
 
       //cout << "oben" << endl;
       collectedfrontiers.calc_orientation_pixel(up,  FrontierMap.data, FrontierMap.info );
@@ -574,9 +589,10 @@ if (  PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info)){
   }
   
 
-  if   ( down <= info_map.width * info_map.height-1 )  
-  { 
-   if (  PixelIsFrontier ( down, FrontierMap.data,  FrontierMap.info)){
+  if   ( down <= info_map.width * info_map.height-1 )  { 
+
+    if (  (down_cell.get_identifier() == 5) || (down_cell.get_identifier() == 1) || (down_cell.get_identifier() == 2) || 
+          (down_cell.get_identifier() == 3) || (down_cell.get_identifier() == 4) || (down_cell.get_identifier() == 6)   ){
 
       //cout << "unten" << endl;
       collectedfrontiers.calc_orientation_pixel(down,  FrontierMap.data, FrontierMap.info );
@@ -585,9 +601,10 @@ if (  PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info)){
   }
  
 
-  if  ( leftup >= info_map.width -1 )  
-  { 
- if (  PixelIsFrontier ( leftup, FrontierMap.data,  FrontierMap.info)){
+  if  ( leftup >= info_map.width -1 )  { 
+
+    if (  (leftup_cell.get_identifier() == 5) || (leftup_cell.get_identifier() == 6) ||  
+          (leftup_cell.get_identifier() == 8) || (leftup_cell.get_identifier() == 9)   ){
 
       //cout << "linksoben" << endl;
       collectedfrontiers.calc_orientation_pixel(leftup,  FrontierMap.data, FrontierMap.info );
@@ -596,9 +613,10 @@ if (  PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info)){
   }
 
 
-  if  ( rightup >= info_map.width -1 )  
-  { 
-  if (  PixelIsFrontier ( rightup, FrontierMap.data,  FrontierMap.info)){
+  if  ( rightup >= info_map.width -1 )  { 
+
+    if (  (rightup_cell.get_identifier() == 5) || (rightup_cell.get_identifier() == 4) ||  
+          (rightup_cell.get_identifier() == 7) || (rightup_cell.get_identifier() == 8)   ){
 
       //cout << "rechtsoben" << endl;
       collectedfrontiers.calc_orientation_pixel(rightup,  FrontierMap.data, FrontierMap.info );
@@ -607,9 +625,10 @@ if (  PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info)){
   }
 
 
-  if  ( leftdown <= info_map.width * info_map.height-1 )  
-  { 
- if (  PixelIsFrontier ( leftdown, FrontierMap.data,  FrontierMap.info)){
+  if  ( leftdown <= info_map.width * info_map.height-1 )  { 
+
+    if (  (leftdown_cell.get_identifier() == 5) || (leftdown_cell.get_identifier() == 2) ||  
+          (leftdown_cell.get_identifier() == 3) || (leftdown_cell.get_identifier() == 6)   ){
 
       //cout << "linksunten" << endl;
       collectedfrontiers.calc_orientation_pixel(leftdown,  FrontierMap.data, FrontierMap.info );
@@ -618,16 +637,17 @@ if (  PixelIsFrontier ( left, FrontierMap.data,  FrontierMap.info)){
   }
   
 
-  if ( rightdown <= info_map.width * info_map.height-1 )  
-  { 
-   if (  PixelIsFrontier ( rightdown, FrontierMap.data,  FrontierMap.info)){
+  if ( rightdown <= info_map.width * info_map.height-1 )  {
+    
+    if (  (rightdown_cell.get_identifier() == 5) || (rightdown_cell.get_identifier() == 2) ||  
+          (rightdown_cell.get_identifier() == 3) || (rightdown_cell.get_identifier() == 6)   ){
 
       //cout << "rechtsunten" << endl;
       collectedfrontiers.calc_orientation_pixel(rightdown,  FrontierMap.data, FrontierMap.info );
       collectedfrontiers=FloodfillFrontiers(rightdown, substitution, FrontierMap.data, FrontierMap.info, collectedfrontiers);
     }
   }
-  //cout << anze <<". Rekursion beendet" << endl;
+
   return collectedfrontiers; 
  }
 
@@ -763,7 +783,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     //Pixel at the up-right corner
 
-    if( cell.get_identifier() == 2){
+    if( cell.get_identifier() == 3){
 
       if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
@@ -781,7 +801,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
        
     //Pixels in the first line--> not included the up left/ up-right corner
 
-    if( cell.get_identifier() == 3){
+    if( cell.get_identifier() == 2){
 
       if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
@@ -818,7 +838,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
     
     // Pixel at the down-left corner
 
-    if(cell.get_identifier() == 5){
+    if(cell.get_identifier() == 7){
 
       if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
@@ -836,7 +856,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     // Pixels in the last line--> not included the down-left / down right corner
 
-    if( cell.get_identifier() == 6 ){
+    if( cell.get_identifier() == 8 ){
 
       if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
@@ -854,7 +874,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     // Pixels in the last column --> not included the up-right / down right corner
 
-    if ( cell.get_identifier() == 7  ){
+    if ( cell.get_identifier() == 6  ){
 
       if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
@@ -872,7 +892,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     //Pixel at the down-right corner
 
-    if( cell.get_identifier() == 8 ){
+    if( cell.get_identifier() == 9 ){
 
       if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
@@ -890,7 +910,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg)
 
     //Other Pixels
 
-    if ( cell.get_identifier() == 9 ){
+    if ( cell.get_identifier() == 5 ){
 
       if (ExistedFrontier(i, every_frontier)==false) {
         addingfrontier = FloodfillFrontiers(i, replacement, FrontierMap.data, FrontierMap.info, addingfrontier);
