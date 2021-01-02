@@ -21,9 +21,11 @@
     <rosparam file="$(find thi_exploration)/config/costmap_common_params_thi_exploration.yaml"     command="load" ns="local_costmap" />
     <rosparam file="$(find thi_exploration)/config/local_costmap_params_thi_exploration.yaml"      command="load" />
     <rosparam file="$(find thi_exploration)/config/global_costmap_params_thi_exploration.yaml"     command="load" /> 
-    <rosparam file="$(find thi_exploration)/config/base_local_planner_params_thi_exploration.yaml" command="load" />
+    <rosparam file="$(find thi_exploration)/config/base_local_planner_params_thi_exploration.yaml" command="load" /> 
 
     <!-- remap topics -->
+    <!-- <remap from="cmd_vel" to="/RosAria/cmd_vel"/>
+    <remap from="odom"    to="/RosAria/pose"/> -->
     <remap from="cmd_vel" to="/robot0/cmd_vel"/>
     <remap from="odom"    to="/robot0/odom"/>
   </node>

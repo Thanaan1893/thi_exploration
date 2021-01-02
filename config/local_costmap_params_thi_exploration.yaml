@@ -3,6 +3,8 @@
 # like in global_costmap_params_thi_exploration
 
 local_costmap:
+  #global_frame: RosAria/pose
+  #robot_base_frame: RosAria/pose
   global_frame: robot0
   robot_base_frame: robot0
   update_frequency: 5.0

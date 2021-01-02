@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   std_msgs
   tf
+  geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -109,7 +110,8 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES thi_exploration
-  CATKIN_DEPENDS move_base_msgs nav_msgs roscpp actionlib move_base std_msgs tf
+  CATKIN_DEPENDS move_base_msgs nav_msgs roscpp actionlib move_base std_msgs tf geometry_msgs
+
 #  DEPENDS system_lib
 )
 
