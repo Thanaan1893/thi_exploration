@@ -1,11 +1,15 @@
 # base_local_planner_params_thi_exploration
 # responsible for computing velocity commands to send to the mobile base of the robot given a high-level plan
 
-
 # define the velocity limits of the robot. 
 TrajectoryPlannerROS:
+
+  # max velocity for robot0 in the simulation 
   max_vel_x: 0.45
+
+  # max velocity for Pioneer 3-AT in the simulation 
   # max_vel_x: 0.3
+
   min_vel_x: 0.1
   max_vel_theta: 1.0
   min_in_place_vel_theta: 0.4
@@ -18,8 +22,9 @@ TrajectoryPlannerROS:
 # holonomic_robot: false
   holonomic_robot: true
 
-# The tolerance in radians/in meters  for the controller in rotation/x & y distance when achieving its goal
-# If goal tolerance is latched, if the robot ever reaches the goal xy location it will simply rotate in place, even if it ends up outside the goal tolerance while it is doing so.
+# The tolerance in radians/ meters for the controller in rotation/ x & y distance when achieving its goal
+# If goal tolerance is latched, while the robot ever reaches the goal xy location it will simply rotate in place,
+# even if it ends up outside the goal tolerance while it is doing so
   yaw_goal_tolerance: 0.1
   xy_goal_tolerance: 0.2
   latch_xy_goal_tolerance: true
@@ -34,5 +39,5 @@ TrajectoryPlannerROS:
 # In units of meters or cells. Cells are assumed by default.
   meter_scoring: true
 
-# publishing the cost grid that the planner will use when planning. When true, a sensor_msgs/PointCloud2 will be available on the ~<name>/cost_cloud topic. Each point cloud represents the cost grid and has a field for each individual scoring function component as well as the overall cost for each cell, taking the scoring parameters into account.
+# publishing the cost grid that the planner will use when planning. 
   publish_cost_grid_pc: true

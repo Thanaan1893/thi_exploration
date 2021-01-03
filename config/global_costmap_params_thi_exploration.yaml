@@ -1,7 +1,6 @@
 # global_costmap_params_thi_exploration
 # configuration options for global costmap
 
-
 # global_frame: definition  what coordinate frame the costmap should run in 
 
 # robot_base_frame: definition  the coordinate frame the costmap references for the base of the robot
@@ -10,17 +9,20 @@
 
 # static_map determiniation whether or not the costmap should initialize itself based on a map served by the map_server.
 
-
 global_costmap:
+  
   global_frame: map_static
-  #robot_base_frame: RosAria/pose
+
+  # frames for the Pioneer 3-AT
+  # robot_base_frame: RosAria/pose
+
+  # frames for the robot0 in the simulation
   robot_base_frame: robot0
+
   update_frequency: 5.0
   static map: true
   
-  # publish_frequency: 5.0
-  # static_map: false
-  # rolling_window: true
+  # width, height and resolution: setting width, height (meters) and resolution (meters/cell) of the costmap. 
   width: 25
   height: 25
   resolution: 0.05

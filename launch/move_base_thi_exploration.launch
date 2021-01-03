@@ -24,8 +24,12 @@
     <rosparam file="$(find thi_exploration)/config/base_local_planner_params_thi_exploration.yaml" command="load" /> 
 
     <!-- remap topics -->
-    <!-- <remap from="cmd_vel" to="/RosAria/cmd_vel"/>
-    <remap from="odom"    to="/RosAria/pose"/> -->
+
+    <!-- remap topics for the Pioneer 3-AT -->
+    <!-- remap from="cmd_vel" to="/RosAria/cmd_vel"/> -->
+    <!-- remap from="odom"    to="/RosAria/pose"/> -->
+
+    <!-- remap topics for the robot0 in the simulation -->
     <remap from="cmd_vel" to="/robot0/cmd_vel"/>
     <remap from="odom"    to="/robot0/odom"/>
   </node>

@@ -2,7 +2,7 @@
 
 <launch>
    <!-- include: Name of file to include -->
-   <!-- node:-->
+   <!-- node: Name of node -->
    <!-- pkg: Package of Node-->
    <!-- type: Node type. There must be a corresponding executable with the same name-->
    <!-- respawn: Restart the node automatically if it quits-->
@@ -18,5 +18,5 @@
    <node pkg="tf" type="static_transform_publisher" name="world2map" args="0 0 0 0 0 0  map world 100" />
    <include file="$(find stdr_gui)/launch/stdr_gui.launch"/>
 
-   <node pkg="stdr_robot" type="robot_handler" name="$(anon robot_spawn)" args="add $(find stdr_resources)/resources/robots/exploration_robot.yaml 1.5 1.5 0.5" />
+   <node pkg="stdr_robot" type="robot_handler" name="$(anon robot_spawn)" args="add $(find thi_exploration)/config/exploration_robot.yaml 1.5 1.5 0.5" />
 </launch>

@@ -1,7 +1,7 @@
 # costmap_common_params_thi_exploration
 # configuration options for local costmap and global costmap
 
-#Setting thresholds on obstacle information into the costmap:
+# Setting thresholds on obstacle information into the costmap:
 
 # obstacle_range: determiniaton of the maximum range sensor reading that will result an obstacle putting into the costmap
 
@@ -26,6 +26,9 @@ observation_sources: laser_scan_sensor
 # marking: determination add obstacle information to the costmap
 # clearing: clear obstacle information from the costmap
 
+# Laser scan sensor for the simulation
 laser_scan_sensor: {sensor_frame: robot0_laser_0, data_type: LaserScan, topic: robot0/laser_0, marking: true, clearing: true} 
+
+# Laser scan sensor for the SICK nanoScan3
 # laser_scan_sensor: {sensor_frame: scan, data_type: LaserScan, topic: sick_safetyscanners/scan
 # , marking: true, clearing: true} 

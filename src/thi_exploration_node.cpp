@@ -1024,7 +1024,7 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg){
   
   // publish the Frontier map 
   map_pub.publish(FrontierMap);
-  ROS_INFO_STREAM("Publishing the NewMap.\n" );
+  ROS_INFO_STREAM("Publishing the Frontier Map.\n" );
 
   // look for the Frontier with the most frontierpixels
   // position = BiggestFrontier( every_frontier);

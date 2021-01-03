@@ -132,7 +132,6 @@
 
   </node>
 
-
-  <node pkg="rviz" type="rviz" name="rviz_1" args="-d $(find thi_exploration)/config/navigation_config_thi_exploration.rviz"/>
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find thi_exploration)/config/navigation_config_thi_exploration.rviz"/>
 
 </launch>

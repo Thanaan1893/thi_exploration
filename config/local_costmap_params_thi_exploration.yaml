@@ -1,18 +1,28 @@
 # local_costmap_params_thi_exploration
 
-# like in global_costmap_params_thi_exploration
+# global_frame: definition  what coordinate frame the costmap should run in 
+
+# robot_base_frame: definition  the coordinate frame the costmap references for the base of the robot
+
+# update_frequency: determiniation of frequency, at which the costmap will run its update loop
+
+# static_map determiniation whether or not the costmap should initialize itself based on a map served by the map_server.
 
 local_costmap:
-  #global_frame: RosAria/pose
-  #robot_base_frame: RosAria/pose
+  # frames for the Pioneer 3-AT
+  # global_frame: RosAria/pose
+  # robot_base_frame: RosAria/pose
+
+  # frames for the robot0 in the simulation
   global_frame: robot0
   robot_base_frame: robot0
+
   update_frequency: 5.0
   publish_frequency: 5.0
   static_map: false
 
 # publish_frequency: determination of the rate, at which the costmap will publish visualization information. 
-# rolling_window: Setting to true means that the costmap will remain centered around the robot as the robot moves through the world
+# rolling_window: the costmap will remain centered around the robot as the robot moves through the world
 # width, height and resolution: setting width, height (meters) and resolution (meters/cell) of the costmap. 
 
   rolling_window: true

@@ -17,9 +17,6 @@
   <!-- type: Node type. There must be a corresponding executable with the same name-->
   <!-- name: Name of Node-->
   <!-- args: Pass arguments to node -->
-
-<!--  <node pkg="rviz" type="rviz" name="rviz_1" args="-d $(find thi_exploration)/config/navigation_config_thi_exploration.rviz"/> -->
-
   <!-- include: Name of file to include -->
   
   <include file="$(find thi_exploration)/launch/mapping_thi_exploration.launch"/>
@@ -32,8 +29,6 @@
     <!--map_file_path: The path generated geotiff maps are saved to-->
     <arg name="map_file_path" value="$(arg geotiff_map_file_path)"/>
   </include>
-
-
 
 </launch>
  

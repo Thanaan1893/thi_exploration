@@ -11,6 +11,7 @@
   <arg name="base_frame" default="/RosAria/pose"/>
   
   <!--The name of the odom frame-->
+  <!-- In this case it is the Pioneer 3-AT -->
   <arg name="odom_frame" default="/RosAria/pose"/>
   
   <!--Determine if the map->odom transform should be published by the system-->
@@ -20,6 +21,7 @@
   <arg name="scan_subscriber_queue_size" default="5"/>
   
   <!-- The laser scan used by the SLAM system.-->
+  <!-- In this case it is the SICK nanoScan3 -->
   <arg name="scan_topic" default="/sick_safetyscanners/scan"/>
 
   <!-- The size [number of cells per axis] of the map-->
@@ -86,6 +88,6 @@
     
     <param name="tf_map_scanmatch_transform_frame_name" value="$(arg tf_map_scanmatch_transform_frame_name)" />
 
-    <remap from="map" to="map_from_gmapping"/> 
+    <remap from="map" to="map_from_hector_slam"/> 
   </node>
 </launch>
