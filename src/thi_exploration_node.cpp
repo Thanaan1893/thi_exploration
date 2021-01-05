@@ -621,12 +621,12 @@ Frontiers FloodfillFrontiers(int counter, int substitution, std::vector<signed c
   down_cell.check_pixeltype(down, FrontierMap.data, FrontierMap.info);
 
   // left up neighbour: subtract the width of the map and 1 from current pixel
-  int leftup = counter - info_map.width - 1;
+  int leftup = counter - info_map.width + 1;
   Pixel leftup_cell ;
   leftup_cell.check_pixeltype(leftup, FrontierMap.data, FrontierMap.info);
 
   // right up neighbour: subtract the width of the map and add 1 from current pixel
-  int rightup = counter  - info_map.width + 1;
+  int rightup = counter  - info_map.width - 1;
   Pixel rightup_cell ;
   rightup_cell.check_pixeltype(rightup, FrontierMap.data, FrontierMap.info);
 
@@ -712,7 +712,7 @@ Frontiers FloodfillFrontiers(int counter, int substitution, std::vector<signed c
   }
  
   // check if the left up neighbour is not out of boundary 
-  if  ( leftup >= info_map.width -1 )  { 
+  if  ( ( leftup >= info_map.width -1 ) && (leftup % info_map.width != 0) ) { 
 
     // only these pixeltypes have an left up neighbour
     if (  (leftup_cell.get_identifier() == 5) || (leftup_cell.get_identifier() == 6) ||  
@@ -724,7 +724,7 @@ Frontiers FloodfillFrontiers(int counter, int substitution, std::vector<signed c
   }
 
   // check if the right up neighbour is not out of boundary 
-  if  ( rightup >= info_map.width -1 )  { 
+  if  ( ( rightup >= info_map.width -1 ) && (rightup % info_map.width != info_map.width -1) ) { 
 
     // only these pixeltypes have an right up neighbour
     if (  (rightup_cell.get_identifier() == 5) || (rightup_cell.get_identifier() == 4) ||  
@@ -736,7 +736,7 @@ Frontiers FloodfillFrontiers(int counter, int substitution, std::vector<signed c
   }
 
   // check if the left down neighbour is not out of boundary 
-  if  ( leftdown <= info_map.width * info_map.height-1 )  { 
+  if ( ( leftdown <= info_map.width * info_map.height-1 ) && (leftdown % info_map.width != 0) ) { 
 
     // only these pixeltypes have an left down neighbour
     if (  (leftdown_cell.get_identifier() == 5) || (leftdown_cell.get_identifier() == 2) ||  
@@ -748,7 +748,7 @@ Frontiers FloodfillFrontiers(int counter, int substitution, std::vector<signed c
   }
   
    // check if the right down neighbour is not out of boundary 
-  if ( rightdown <= info_map.width * info_map.height-1 )  {
+  if ( ( rightdown <= info_map.width * info_map.height-1 )  &&  (rightdown % info_map.width != info_map.width -1) ){
     
     // only these pixeltypes have an right down neighbour
     if (  (rightdown_cell.get_identifier() == 5) || (rightdown_cell.get_identifier() == 2) ||  
