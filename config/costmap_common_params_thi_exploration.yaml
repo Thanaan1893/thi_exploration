@@ -11,10 +11,10 @@ obstacle_range: 2.5
 raytrace_range: 3.0
 
 # Set the footprint of the robot
-footprint: [[0.25, 0.25], [-0.25, 0.25], [-0.25, -0.25], [0.25, -0.25]]
+robot_radius: 0.05
 
 # the robot will treat all paths that stay x meters or more away from obstacles as having equal obstacle cost.
-inflation_radius: 0.55
+inflation_radius: 0.15
 
 # observation_sources: Definition of a list sensors that are going to be passing information to the costmap 
 observation_sources: laser_scan_sensor

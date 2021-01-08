@@ -2,7 +2,7 @@ robot:
   robot_specifications:
     - footprint:
         footprint_specifications:
-          radius: 0.2
+          radius: 0.05
     - initial_pose:
         x: 0
         y: 0
@@ -20,7 +20,7 @@ robot:
             x: 0
             y: 0
             theta: 0
-          noise:
-            noise_specifications:
-              noise_mean: 0.5
-              noise_std: 0.0500000007450581
+          # noise:
+          #   noise_specifications:
+          #     noise_mean: 0.5
+          #     noise_std: 0.0500000007450581

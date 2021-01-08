@@ -9,6 +9,7 @@
   <!-- name: Name of Node-->
   <!-- output: If 'screen', stdout/stderr from the node will be sent to the screen-->
   <!-- args: Pass arguments to node -->
+  <!-- <param name ="/use_sim_time" value="true"/> -->
 
   <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen"> 
 
@@ -22,6 +23,7 @@
     <rosparam file="$(find thi_exploration)/config/local_costmap_params_thi_exploration.yaml"      command="load" />
     <rosparam file="$(find thi_exploration)/config/global_costmap_params_thi_exploration.yaml"     command="load" /> 
     <rosparam file="$(find thi_exploration)/config/base_local_planner_params_thi_exploration.yaml" command="load" /> 
+    <param name="controller_frequency" value="5"/>
 
     <!-- remap topics -->
 

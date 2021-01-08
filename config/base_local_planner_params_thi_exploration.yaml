@@ -19,8 +19,7 @@ TrajectoryPlannerROS:
   acc_lim_x: 2.5
   acc_lim_y: 2.5
 
-# holonomic_robot: false
-  holonomic_robot: true
+  holonomic_robot: false
 
 # The tolerance in radians/ meters for the controller in rotation/ x & y distance when achieving its goal
 # If goal tolerance is latched, while the robot ever reaches the goal xy location it will simply rotate in place,

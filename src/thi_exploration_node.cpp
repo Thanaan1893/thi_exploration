@@ -4,6 +4,9 @@
 // Including standard vector
 #include <vector>
 
+// Including math for functions 
+#include<math.h>
+
 // Including the ROS libary
 #include <ros/ros.h>
 
@@ -60,6 +63,10 @@ class Frontiers {
     // orientation of the frontier x and y
     float orientation_frontier_x;
     float orientation_frontier_y;
+    // Orientation quaternion
+    geometry_msgs:: Quaternion goalquat;
+    // Rotate angle in rad
+    double yaw;
 
   // public methods
   public:
@@ -72,6 +79,7 @@ class Frontiers {
       distance = 0;
       orientation_frontier_x = 0;
       orientation_frontier_y = 0;
+      yaw = 0;
     }
     
     // method for deleting the frontier
@@ -87,6 +95,7 @@ class Frontiers {
       distance = 0;
       orientation_frontier_x = 0;
       orientation_frontier_y = 0;
+      yaw = 0;
     }
 
     // Getter for the attributes
@@ -99,6 +108,14 @@ class Frontiers {
     // Getter for position in the standardvector pixels
     int get_pixel(int index){
       return pixels[index];
+    }
+
+    int get_xpos(int index){
+      return xpos[index];
+    }
+
+    int get_ypos(int index){
+      return ypos[index];
     }
 
     float get_gravity_of_center_x(){
@@ -121,24 +138,34 @@ class Frontiers {
       return orientation_frontier_y;
     }
 
+    geometry_msgs:: Quaternion get_orientation(){
+      return goalquat;
+    }
+
     //pushing back the argument to the standardvector pixels 
     void set_pixels(int pos){
       pixels.push_back(pos);
     }
 
+    
     // method for printing attributes in the terminal for debugging
     void print_frontier(){
 
       // Loop for run through the standardvector pixels
-      for (int i = 0; i < pixels.size(); i++){
+      // for (int i = 0; i < pixels.size(); i++){
         
         // printing the attributes
-        cout<< "Pixel in the Frontiers are: "<< pixels[i] <<endl;
-        cout<< "Pixel in x coordinate: "<< xpos[i] <<endl;
-        cout<< "Pixel in y_coordinate: "<< ypos[i] <<endl;
-      }
-        cout<< "gravity_of_center x coordinate: "<< gravity_of_center_x <<endl;
-        cout<< "gravity_of_center y_coordinate: "<< gravity_of_center_y <<endl;
+      //   cout<< "Pixel in the Frontiers are: "<< pixels[i] <<endl;
+      //   cout<< "Pixel in x coordinate: "<< xpos[i] <<endl;
+      //   cout<< "Pixel in y_coordinate: "<< ypos[i] <<endl;
+      // }
+        //cout<< "orientation_frontier_x Frontier: "<< orientation_frontier_x <<endl;
+        //cout<< "orientation_frontier_y Frontier: "<< orientation_frontier_y <<endl;
+        //cout<<tf::createQuaternionMsgFromYaw(std::atan2(orientation_frontier_y, orientation_frontier_x))<<endl;
+        //cout<< "Gravitiy of center x Frontier: "<< gravity_of_center_x <<endl;
+        //cout<< "Gravitiy of center y Frontier: "<< gravity_of_center_y <<endl;
+        cout<< "Number of pixels in the Frontier: "<< pixels.size() <<endl;
+        cout<< "Distance to the Frontier: "<< distance <<endl;
     }
     
     // checking, if the pixel is already in the Frontier  
@@ -211,28 +238,7 @@ class Frontiers {
     // divide all coordinates with size of the standardvector
     gravity_of_center_x = x/xpos.size();
     gravity_of_center_y = y/ypos.size();
-
-    // back transfromation form coordinates to pixel
-    // opposite form method pixels_x_y_transformation
-    pixel_x = ((gravity_of_center_x - info_move_base.origin.position.x) / info_move_base.resolution) ;
-    pixel_y = ((gravity_of_center_y - info_move_base.origin.position.y) / info_move_base.resolution) * info_move_base.width;
-    pixel = pixel_x + pixel_y;
-
-    // if gravity of center is an occupied pixel 
-    if (data_move_base[pixel] == occupied_pixel){
-
-      // Loop for run through the standardvector pixels
-      for (int k = 0; k <pixels.size(); k++){
-        
-        // select the first pixel as the new gravitiy of center, which is free 
-        if ( (data_move_base[pixels[k]] == free_pixel ) ){
-          gravity_of_center_x = xpos[k];
-          gravity_of_center_y = ypos[k];
-          break;
-        } 
-      }
-    }
-      
+   
   }
 
   // calculation of the euclidian distance (robot postion and gravity of center)
@@ -269,42 +275,42 @@ class Frontiers {
     // Index may not in the first line
     // subtract 1 to the y-coordinate  
     if( (latest>= info_orientation.width -1) && (data_orientation[latest-info_orientation.width]== unexplored_pixel) ){
-      latest_orientation = latest_orientation + tf::Vector3 (0,-1,0);
+      latest_orientation = latest_orientation + tf::Vector3 (0,1,0);
     }
 
     // Down
     // Index may not in the last line
     // add 1 to the y-coordinate
     if( (latest<= info_orientation.width * info_orientation.height-1) && (data_orientation[latest+info_orientation.width]== unexplored_pixel) ){
-      latest_orientation = latest_orientation + tf::Vector3 (0,1,0);
+      latest_orientation = latest_orientation + tf::Vector3 (0,-1,0);
     }
 
     // LeftUp
     // Index may not in the first line and column
     // subtract 1 to the x and y-coordinate
     if( (latest >= info_orientation.width -1) && (latest % info_orientation.width != 0) && (data_orientation[latest-info_orientation.width-1]== unexplored_pixel) ){
-      latest_orientation = latest_orientation + tf::Vector3 (-1,-1,0);
+      latest_orientation = latest_orientation + tf::Vector3 (-1,1,0);
     }
 
     // RightUp
     // Index may not in the first line and last column
     // add 1 to the x-coordinate and subtract 1 y-coordinate
     if( (latest >= info_orientation.width -1) && (latest % info_orientation.width != info_orientation.width -1) && (data_orientation[latest-info_orientation.width+1]== unexplored_pixel) ){
-      latest_orientation = latest_orientation + tf::Vector3 (1,-1,0);
+      latest_orientation = latest_orientation + tf::Vector3 (1,1,0);
     }
 
     // LeftDown
     // Index may not in the last line and first column
     // subtract 1 to the x-coordinate and add 1 y-coordinate
     if( (latest <= info_orientation.width * info_orientation.height-1) && (latest % info_orientation.width != 0) && (data_orientation[latest+info_orientation.width-1]== unexplored_pixel) ){
-      latest_orientation = latest_orientation + tf::Vector3 (-1,1,0);
+      latest_orientation = latest_orientation + tf::Vector3 (-1,-1,0);
     }
 
     // RightDown
     // Index may not in the last line and  column
     // add 1 to the x-coordinate and y-coordinate
     if( (latest <= info_orientation.width * info_orientation.height-1) && (latest % info_orientation.width != info_orientation.width -1)&& (data_orientation[latest+info_orientation.width+1]== unexplored_pixel) ){
-      latest_orientation = latest_orientation + tf::Vector3 (1,1,0);
+      latest_orientation = latest_orientation + tf::Vector3 (1,-1,0);
     }
     
     // pushing back the orientation in the standardvector
@@ -334,6 +340,17 @@ class Frontiers {
     // saving the variables in the attributes  
     orientation_frontier_x = sum_x;
     orientation_frontier_y = sum_y;
+
+    // Create a quaternion from the orientation_x and y for MoveBase
+    goalquat = tf::createQuaternionMsgFromYaw(std::atan2(orientation_frontier_y, orientation_frontier_x));
+
+    // Get der Rotate angle from the quaternion 
+    yaw = tf::getYaw(goalquat);
+
+    // Subtract an offset on the dependency from the orientation to the gravitiy of center
+    gravity_of_center_x -= 0.5*cos(yaw);
+    gravity_of_center_y -= 0.5*sin(yaw);
+    
   }
 
 };
@@ -484,7 +501,7 @@ class MoveBase{
 
     // constructor:
     // For sending target pose and orientattion
-    MoveBase( float position_x, float position_y, float position_z, float orientation_w, float orientation_x, float orientation_y, float orientation_z ){
+    MoveBase( float position_x, float position_y, float position_z, geometry_msgs:: Quaternion goalquat ){
     
       // Name of the frame, which belongs 
       // to the target pose and orientation 
@@ -499,10 +516,10 @@ class MoveBase{
       goal.target_pose.pose.position.z = position_z;
 
       // define the quaternion for the orientation
-      goal.target_pose.pose.orientation.w = orientation_w;
-      goal.target_pose.pose.orientation.x = orientation_x;
-      goal.target_pose.pose.orientation.y = orientation_y;
-      goal.target_pose.pose.orientation.z = orientation_z;
+      goal.target_pose.pose.orientation.w = goalquat.w;
+      goal.target_pose.pose.orientation.x = goalquat.x;
+      goal.target_pose.pose.orientation.y = goalquat.y;
+      goal.target_pose.pose.orientation.z = goalquat.z;
 
       // tell the action client to spin a thread by default
       MoveBaseClient ac("move_base", true);
@@ -878,6 +895,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg){
         every_frontier.push_back(addingfrontier);
         addingfrontier.delete_frontier();
         replacement = replacement + 10;
+        if (replacement == 100){
+          replacement = replacement + 10;
+        }
       }
       continue;
     }
@@ -894,6 +914,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg){
         every_frontier.push_back(addingfrontier);
         addingfrontier.delete_frontier();
         replacement = replacement + 10;
+         if (replacement == 100){
+          replacement = replacement + 10;
+        }
       }
       continue;
     }
@@ -910,6 +933,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg){
         every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_frontier();
+         if (replacement == 100){
+          replacement = replacement + 10;
+        }
       }
       
       continue;
@@ -927,6 +953,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg){
         every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_frontier();
+         if (replacement == 100){
+          replacement = replacement + 10;
+        }
       }
       
       continue;
@@ -945,6 +974,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg){
         every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_frontier();
+         if (replacement == 100){
+          replacement = replacement + 10;
+        }
       }
       continue;
     }
@@ -961,6 +993,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg){
         every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_frontier();
+         if (replacement == 100){
+          replacement = replacement + 10;
+        }
       }
       continue;
     }
@@ -977,6 +1012,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg){
         every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_frontier();
+         if (replacement == 100){
+          replacement = replacement + 10;
+        }
       }
       continue;
     }
@@ -994,6 +1032,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg){
         every_frontier.push_back(addingfrontier);
         replacement = replacement + 10;
         addingfrontier.delete_frontier();
+         if (replacement == 100){
+          replacement = replacement + 10;
+        }
       }
       continue;
     }
@@ -1010,6 +1051,9 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg){
         every_frontier.push_back(addingfrontier);
         addingfrontier.delete_frontier();
         replacement = replacement + 10;
+         if (replacement == 100){
+          replacement = replacement + 10;
+        }
       }
     }
 
@@ -1027,13 +1071,14 @@ void mapCallback(const nav_msgs:: OccupancyGrid::ConstPtr& msg){
   ROS_INFO_STREAM("Publishing the Frontier Map.\n" );
 
   // look for the Frontier with the most frontierpixels
-  // position = BiggestFrontier( every_frontier);
+  position = BiggestFrontier( every_frontier);
 
   // look for the Frontier with the shortest distance to the current robot position 
-  position = ShortestDistanceFrontier( every_frontier);
+  // position = ShortestDistanceFrontier( every_frontier);
+  every_frontier[position].print_frontier();
 
   // send the position and the orientation of the selected frontier to the move base client
-  MoveBase next_target( every_frontier[position].get_gravity_of_center_x(), every_frontier[position].get_gravity_of_center_y(), 0, 1, 0, 0, every_frontier[position].get_orientation_frontier_x()+ every_frontier[position].get_orientation_frontier_y());
+  MoveBase next_target( every_frontier[position].get_gravity_of_center_x(), every_frontier[position].get_gravity_of_center_y(), 0, every_frontier[position].get_orientation());
   
   // delete the standardvector every_frontier  
   every_frontier.clear();

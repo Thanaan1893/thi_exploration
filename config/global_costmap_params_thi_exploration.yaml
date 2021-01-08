@@ -11,7 +11,7 @@
 
 global_costmap:
   
-  global_frame: map_static
+  global_frame: map
 
   # frames for the Pioneer 3-AT
   # robot_base_frame: RosAria/pose
