@@ -10,7 +10,7 @@
    <!-- output: If 'screen', stdout/stderr from the node will be sent to the screen-->
    <!-- args: Pass arguments to node -->
    <!-- anon name: Generates an anonymous id based on name. name itself is a unique identifier-->
-  
+
 
    <include file="$(find stdr_robot)/launch/robot_manager.launch" />
    <node type="stdr_server_node" pkg="stdr_server" name="stdr_server" output="screen" args="$(find stdr_resources)/maps/sparse_obstacles.yaml"/>
